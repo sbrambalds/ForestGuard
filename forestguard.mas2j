@@ -1,0 +1,9 @@
+MAS forestGuard {
+
+	infrastructure: Centralised
+
+	agents:
+
+	aslSourcePath:
+		"src/main/asl";
+}
