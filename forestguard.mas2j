@@ -2,7 +2,16 @@ MAS forestGuard {
 
 	infrastructure: Centralised
 
+	environment:
+
 	agents:
+	    station station_agent;
+	    scout1 scout_agent;
+	    scout2 scout_agent;
+	    scout3 scout_agent;
+	    scout4 scout_agent;
+	    firefighter1 firefighter_agent;
+	    firefighter2 firefighter_agent;
 
 	aslSourcePath:
 		"src/main/asl";

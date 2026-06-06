@@ -1,17 +1,29 @@
 plugins {
     id("java")
+    id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
 group = "org.example"
 version = "1.0-SNAPSHOT"
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 repositories {
     mavenCentral()
 }
 
+javafx {
+    version = "21"
+    modules = listOf("javafx.controls", "javafx.fxml")
+}
+
 dependencies {
     implementation("io.github.jason-lang:jason-interpreter:3.2.1")
-    testImplementation("junit", "junit", "4.13.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 }
 
 file(projectDir).listFiles().filter { it.extension == "mas2j" }.forEach { mas2jFile ->
@@ -21,7 +33,6 @@ file(projectDir).listFiles().filter { it.extension == "mas2j" }.forEach { mas2jF
         mainClass.set("jason.infra.centralised.RunCentralisedMAS")
         args(mas2jFile.path)
         standardInput = System.`in`
-        javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
     }
 }
 
