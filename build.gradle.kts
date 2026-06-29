@@ -1,10 +1,14 @@
 plugins {
     id("java")
-    id("org.openjfx.javafxplugin") version "0.1.0"
+    application
 }
 
 group = "org.example"
 version = "1.0-SNAPSHOT"
+
+application {
+    mainClass.set("view.ForestPanel")
+}
 
 java {
     toolchain {
@@ -14,11 +18,6 @@ java {
 
 repositories {
     mavenCentral()
-}
-
-javafx {
-    version = "21"
-    modules = listOf("javafx.controls", "javafx.fxml")
 }
 
 dependencies {

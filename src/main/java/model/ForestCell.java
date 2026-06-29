@@ -1,6 +1,6 @@
 package model;
 
-class ForestCell {
+public class ForestCell {
     private CellState state;
 
     public ForestCell(CellState state) {

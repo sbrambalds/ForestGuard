@@ -1,9 +1,11 @@
 package model;
 
-enum CellState {
+public enum CellState {
     TREE,
     EMPTY,
     BURNING,
     WATER,
-    ROCK
+    STATION,
+    FF_DRONE,
+    S_DRONE
 }
