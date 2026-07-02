@@ -15,6 +15,7 @@ public final class ForestModel {
     private final Queue<Coord2D> lakes = new LinkedList<>();
     private static final int CENTER_X = Config.GRID_WIDTH / 2;
     private static final int CENTER_Y = Config.GRID_HEIGHT / 2;
+    private int fps = 1;
 
     public ForestModel() {
         grid = new ForestCell[Config.GRID_WIDTH][Config.GRID_HEIGHT];
@@ -136,4 +137,7 @@ public final class ForestModel {
     public ForestCell[][] getGrid() {
         return grid;
     }
+
+    public int getFPS()         { return this.fps; }
+    public void setFPS(int fps) { this.fps = fps; }
 }

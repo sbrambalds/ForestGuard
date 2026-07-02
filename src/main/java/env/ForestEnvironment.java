@@ -39,7 +39,7 @@ public class ForestEnvironment extends Environment {
 
         initStationAgent();
 
-        this.controller = new SimulationController(model, agentsPoses);
+        this.controller = new SimulationController(model, agentsPoses, this);
 
         SwingUtilities.invokeLater(() -> controller.startSimulation());
     }
@@ -99,6 +99,7 @@ public class ForestEnvironment extends Environment {
         if(agent.contains("scout")){
             Coord2D pos = agentsPoses.get(agent);
             percepts.add(Literal.parseLiteral("position(" + pos.x() + "," + pos.y() + ")"));
+            percepts.add(Literal.parseLiteral("recharge_time(" + (5 * 1000 / model.getFPS()) + ")"));
             percepts.addAll(mappingPercepts(agent));
             percepts.addAll(obstaclePercepts(agent));
         } else if(agent.equals("station")) {
@@ -123,7 +124,7 @@ public class ForestEnvironment extends Environment {
                 }
             } catch (NoValueException e) {}
             try {
-                Thread.sleep(1000L / Config.FPS);
+                Thread.sleep(1000L / model.getFPS());
             } catch (InterruptedException ignored) { }
             notifyChange();
             return true;

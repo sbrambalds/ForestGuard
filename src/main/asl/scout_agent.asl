@@ -39,9 +39,9 @@ offset(0, -1).
     -back_to_station(XD, YD)[source(A)];
     !come_back(XD, YD).
 
-+!come_back(XD, YD) : position(X, Y) & X == XD & Y == YD <-
++!come_back(XD, YD) : position(X, Y) & X == XD & Y == YD & recharge_time(T) <-
     .print("Arrived. Recharging...");
-    .wait(5000);
+    .wait(T);
     .print("Fully charged!");
     -+battery_level(100, 1);
     -+status(scouting);

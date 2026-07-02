@@ -81,7 +81,6 @@ public class ForestPanel extends JPanel {
         try {
             SwingUtilities.invokeAndWait(this::repaint);
         } catch (InterruptedException | InvocationTargetException e) {
-            e.printStackTrace();
         }
     }
 }
