@@ -16,3 +16,13 @@
         }
     };
     -drone_state(X, Y, Battery, Steps)[source(A)].
+
++map_update(L)[source(A)] <- 
+    !save_pos(L).
+    -map_update(L)[source(A)].
+
++!save_pos([]).
+
++!save_pos([H | T]) : H == map(Xc, Yc, State) <- 
+    +cell(Xc, Yc, State);
+    !save_pos(T).

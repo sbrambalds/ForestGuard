@@ -18,21 +18,20 @@ offset(0, -1).
     !move;
     !scouting.
 
-+!move : battery_level(L, S) & L > 0 & position(X, Y) & status(scouting) <-
++!move : battery_level(Level, Steps) & Level > 0 & position(X, Y) & status(scouting) <-
     !choose_step(NewX, NewY);
     move(NewX, NewY);
+    .findall(map(Xc, Yc, State), cell(Xc, Yc, State), Cells);
+    .send(station, tell, Cells);
     -+came_from(X, Y);
-    if(S == 0) {
-        -+battery_level(L - 1, 1);
+    if(Steps == 0) {
+        -+battery_level(Level - 1, 1);
     } else {
-        -+battery_level(L, S - 1);
+        -+battery_level(Level, Steps - 1);
     };
-    .send(station, tell, drone_state(X, Y, L, S)). // batteria deve calare ogni N passi
-    //.print("New position (", NewX, ", ", NewY,")").
+    .send(station, tell, drone_state(X, Y, Level, Steps)).
 
--!move : status(scouting) <-
-    -+status(back_home).    // calcolare la distanza da percorrere per tornare
-    //!back_to_station().     // alla base per vedere se la carica è sufficiente
+-!move : status(scouting) <- -+status(back_home).
 
 +back_to_station(XD, YD)[source(A)] <-
     .print("Coming back to recharge...");
@@ -94,5 +93,4 @@ offset(0, -1).
 +!choose_step(NewX, NewY): position(X, Y) & bound(Xmin, Xmax, Ymin, Ymax) <-
     .findall(free(NX, NY), (offset(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
     .random(L, Pos);
-    Pos = free(NewX, NewY);
-    .print("posizioni libere: ", L).
+    Pos = free(NewX, NewY).
