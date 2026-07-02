@@ -5,10 +5,11 @@ MAS forestGuard {
 	environment: env.ForestEnvironment()
 
 	agents: // which agents partecipates the MAS?
-		scoutN scout_agent;
-		scoutE scout_agent;
-		scoutW scout_agent;
-		scoutS scout_agent;
+		scoutN scout_agent [beliefs="bound(35, 69, 20, 39)"];
+		scoutE scout_agent [beliefs="bound(35, 69, 0, 19)"];
+		scoutW scout_agent [beliefs="bound(0, 34, 20, 39)"];
+		scoutS scout_agent [beliefs="bound(0, 34, 0, 19)"];
+		station station_agent;
 
 	aslSourcePath:
 		"src/main/asl";
