@@ -42,6 +42,11 @@ public final class ForestModel {
                 grid[i][j].updateState(CellState.STATION);
             }
         }
+
+        grid[CENTER_X + 2][CENTER_Y + 3].updateState(CellState.CHARGE_STATION);
+        grid[CENTER_X + 2][CENTER_Y - 3].updateState(CellState.CHARGE_STATION);
+        grid[CENTER_X - 2][CENTER_Y - 3].updateState(CellState.CHARGE_STATION);
+        grid[CENTER_X - 2][CENTER_Y + 3].updateState(CellState.CHARGE_STATION);
     }
 
     private void generateLakes() {
@@ -130,9 +135,5 @@ public final class ForestModel {
 
     public ForestCell[][] getGrid() {
         return grid;
-    }
-
-    public void nextStep() {
-        // compute agents new positions
     }
 }

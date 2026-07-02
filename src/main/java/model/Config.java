@@ -8,5 +8,5 @@ public final class Config {
         public static final int LAKES_NUMBER = 10;
         public static final int CELL_SIZE = 21;
         public static final int BATTERY = 100;
-        public static final int FPS = 60;
+        public static final int FPS = 5;
 }

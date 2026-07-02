@@ -30,6 +30,7 @@ public class SpriteRepository {
     private Image water;
     private Image ffDrone;
     private Image sDrone;
+    private Image cStation;
 
     public SpriteRepository() {
         loadSprites();
@@ -46,6 +47,7 @@ public class SpriteRepository {
         water = load(RES + "water/water_full.png");
         ffDrone = load(DRONES_PATH + "drone_firefighter.png");
         sDrone = load(DRONES_PATH + "drone_scout.png");
+        cStation = load(STATION_PATH + "drone_charging_pad.png");
 
         for (String name : new String[]{
             "edge_top", "edge_bottom", "edge_left", "edge_right",
@@ -91,11 +93,12 @@ public class SpriteRepository {
         }
     }
 
-    public Image getTree(int i, int j)          { return trees.get(treeVariants[i][j]); }
-    public Image getGrass()                      { return grass; }
-    public Image getWater()                      { return water; }
-    public Image getTransition(String name)      { return waterSprites.get(name); }
-    public Image getStation(String name)         { return stationSprites.get(name); }
-    public Image getFFDrone()                    { return ffDrone; }
-    public Image getSDrone()                    { return sDrone; }
+    public Image getTree(int i, int j)              { return trees.get(treeVariants[i][j]); }
+    public Image getGrass()                         { return grass; }
+    public Image getWater()                         { return water; }
+    public Image getTransition(String name)         { return waterSprites.get(name); }
+    public Image getStation(String name)            { return stationSprites.get(name); }
+    public Image getFFDrone()                       { return ffDrone; }
+    public Image getSDrone()                        { return sDrone; }
+    public Image getCStation()                      { return cStation; }
 }

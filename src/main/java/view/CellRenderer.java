@@ -45,6 +45,9 @@ public class CellRenderer {
                 int relY = j - (centerY - STATION_SIZE / 2);
                 g.drawImage(sprites.getStation(STATION_LAYOUT[relY][relX]), x, y, s, s, null);
             }
+            case CHARGE_STATION -> {
+                g.drawImage(sprites.getCStation(), x, y, s, s, null);
+            }
             // case BURNING -> {
             //     g.setColor(Color.red);
             //     g.fillRect(x, y, s, s);
