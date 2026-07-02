@@ -3,7 +3,6 @@ package controller;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -26,16 +25,11 @@ public class SimulationController {
     private final JFrame frame;
     private Timer timer;
     private int currentDelay = BASE_DELAY;
-    private Semaphore sem;
-    private int agentsNumber;
-
-    public SimulationController(ForestModel model, Map<String, Coord2D> agentsPoses, Semaphore sem) {
+    public SimulationController(ForestModel model, Map<String, Coord2D> agentsPoses) {
         this.model = model;
-        this.agentsNumber = agentsPoses.size();
         this.view = new ForestPanel(this.model, agentsPoses);
         this.frame = new JFrame("ForestGuard");
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.sem = sem;
     }
 
     public void startSimulation() {
@@ -45,8 +39,6 @@ public class SimulationController {
         ));
 
         timer = new Timer(currentDelay, e -> {
-            model.nextStep();
-            sem.release(agentsNumber);
             view.repaint();
         });
 

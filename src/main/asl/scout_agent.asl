@@ -1,30 +1,98 @@
-battery_level(100, 5).
+battery_level(100, 1).
 status(scouting).
+
+offset(1, 0).
+offset(-1, 0).
+offset(0, 1).
+offset(0, -1).
 
 !start.
 
 +!start <-
-    .print("I am ready");
+    .print("Start scouting...");
     !scouting.
+
++!scouting : status(back_home) <- true.
 
 +!scouting <-
     !move;
-    //!map();
     !scouting.
 
-+!move : battery_level(L, S) & L > 0 & position(X, Y) <-
++!move : battery_level(L, S) & L > 0 & position(X, Y) & status(scouting) <-
+    !choose_step(NewX, NewY);
+    move(NewX, NewY);
+    -+came_from(X, Y);
     if(S == 0) {
-        -+battery_level(L - 1, 5);
+        -+battery_level(L - 1, 1);
     } else {
         -+battery_level(L, S - 1);
-    }; // batteria deve calare ogni N passi
-    NewX = X + 1;
-    -+position(NewX, Y);
-    move(NewX, Y);
-    .print("New Position X = ", X, ", Y = ", Y).
+    };
+    .send(station, tell, drone_state(X, Y, L, S)). // batteria deve calare ogni N passi
+    //.print("New position (", NewX, ", ", NewY,")").
 
 -!move : status(scouting) <-
     -+status(back_home).    // calcolare la distanza da percorrere per tornare
     //!back_to_station().     // alla base per vedere se la carica è sufficiente
 
-//+!back_to_station() : <- ??
++back_to_station(XD, YD)[source(A)] <-
+    .print("Coming back to recharge...");
+    -+status(back_home);
+    -back_to_station(XD, YD)[source(A)];
+    !come_back(XD, YD).
+
++!come_back(XD, YD) : position(X, Y) & X == XD & Y == YD <-
+    .print("Arrived. Recharging...");
+    .wait(5000);
+    .print("Fully charged!");
+    -+battery_level(100, 1);
+    -+status(scouting);
+    -+came_from(XD, YD);
+    !scouting.
+
++!come_back(XD, YD) : position(X, Y) & X \== XD <-
+    if(X > XD) { PrefX = X - 1; } else { PrefX = X + 1; };
+    if(not obstacle(PrefX, Y)) {
+        move(PrefX, Y);
+    } else {
+        if(Y > YD) { AltY = Y - 1; } else { AltY = Y + 1; };
+        move(X, AltY);
+    };
+    !come_back(XD, YD).
+
++!come_back(XD, YD) : position(X, Y) & Y \== YD <-
+    if(Y > YD) { PrefY = Y - 1; } else { PrefY = Y + 1; };
+    if(not obstacle(X, PrefY)) {
+        move(X, PrefY);
+    } else {
+        if(X > XD) { AltX = X - 1; } else { AltX = X + 1; };
+        move(AltX, Y);
+    };
+    !come_back(XD, YD).
+
+-!come_back(XD, YD) <-
+    .print("Navigation failure during come_back to ", XD, ", ", YD).
+
++!choose_step(NewX, NewY): position(X, Y) & came_from(PX, PY) & bound(Xmin, Xmax, Ymin, Ymax) <-
+    SX = X + (X - PX);
+    SY = Y + (Y - PY);
+    .findall(free(NX, NY), (offset(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
+
+    if(.member(free(SX, SY), L)) {
+        .concat(L, [free(SX,SY), free(SX,SY), free(SX,SY), free(SX,SY)], WeightedL);
+    } else {
+        WeightedL = L;
+    };
+
+    if(WeightedL \== []) {
+        .random(WeightedL, Pos);
+        Pos = free(NewX, NewY);
+    } else {
+        NewX = PX;
+        NewY = PY;
+    }.
+
++!choose_step(NewX, NewY): position(X, Y) & bound(Xmin, Xmax, Ymin, Ymax) <-
+    .findall(free(NX, NY), (offset(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
+    .random(L, Pos);
+    Pos = free(NewX, NewY);
+    .print("posizioni libere: ", L).
