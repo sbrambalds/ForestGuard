@@ -83,7 +83,7 @@ public class ForestEnvironment extends Environment {
         for (Coord2D pos : pose.cardinalNeighbours()) {
             if(pos.isValid()) {
                 CellState posState = model.getGrid()[pos.x()][pos.y()].getState();
-                if(agentsPoses.containsValue(pos) || posState == CellState.STATION) {
+                if(agentsPoses.containsValue(pos) || posState == CellState.STATION || posState == CellState.BURNING) {
                     obstacles.add(Literal.parseLiteral("obstacle(" + pos.x() + ", " + pos.y() + ")"));
                 }
             }

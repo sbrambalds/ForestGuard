@@ -18,13 +18,15 @@ import view.ForestPanel;
 
 public class SimulationController {
 
-    private static final int BASE_DELAY = 1000;
+    private final static int BASE_DELAY = 15000;
 
     private final ForestModel model;
     private final ForestPanel view;
     private final JFrame frame;
-    private Timer timer;
-    private int currentDelay = BASE_DELAY;
+    private Timer fireTimer;
+    private Timer spreadFireTimer;
+    private final int startFireDelay = BASE_DELAY;
+    private final int spreadFireDelay = BASE_DELAY / 3;
 
     public SimulationController(ForestModel model, Map<String, Coord2D> agentsPoses, ForestEnvironment env) {
         this.model = model;
@@ -39,8 +41,11 @@ public class SimulationController {
             Config.GRID_HEIGHT * Config.CELL_SIZE
         ));
 
-        timer = new Timer(currentDelay, e -> {
-            view.repaint();
+        fireTimer = new Timer(startFireDelay / model.getFPS(), e -> model.startRandomFire());
+
+        spreadFireTimer = new Timer(spreadFireDelay / model.getFPS(), e -> {
+            model.spreadFire();
+            model.removeTree().forEach(c -> view.updateCell(c.x(), c.y()));
         });
 
         frame.setLayout(new BorderLayout());
@@ -51,7 +56,8 @@ public class SimulationController {
 
         view.initBuffer();
 
-        timer.start();
+        fireTimer.start();
+        spreadFireTimer.start();
     }
 
     private JPanel buildControlPanel() {
@@ -61,10 +67,13 @@ public class SimulationController {
         JSlider speed = new JSlider(JSlider.HORIZONTAL, 1, 60, model.getFPS());
         JLabel speedValue = new JLabel(model.getFPS() + " FPS");
         speed.addChangeListener(e -> {
-            model.setFPS(speed.getValue());
-            currentDelay = 1000 / model.getFPS();
-            speedValue.setText(speed.getValue() + " FPS");
-            timer.setDelay(currentDelay);
+            int fps = speed.getValue();
+            model.setFPS(fps);
+            speedValue.setText(fps + " FPS");
+            fireTimer.setDelay(startFireDelay / fps);
+            fireTimer.restart();
+            spreadFireTimer.setDelay(spreadFireDelay / fps);
+            spreadFireTimer.restart();
         });
 
         controls.add(speedUp);

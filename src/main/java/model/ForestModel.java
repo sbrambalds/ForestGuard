@@ -1,20 +1,27 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import utils.Coord2D;
 
 public final class ForestModel {
 
+    private static final int CENTER_X = Config.GRID_WIDTH / 2;
+    private static final int CENTER_Y = Config.GRID_HEIGHT / 2;
+    private static final double SPREAD_PROB = 0.7;
+    private static final long BURNING_DELAY = 30_000L;
+
     private final Random rand = new Random();
     private ForestCell[][] grid = new ForestCell[Config.GRID_WIDTH][Config.GRID_HEIGHT];
     private final Queue<Coord2D> lakes = new LinkedList<>();
-    private static final int CENTER_X = Config.GRID_WIDTH / 2;
-    private static final int CENTER_Y = Config.GRID_HEIGHT / 2;
+    private final List<Coord2D> trees = new ArrayList<>();
+    private final HashMap<Coord2D, Long> burningTrees = new HashMap<>();
     private int fps = 1;
 
     public ForestModel() {
@@ -27,17 +34,12 @@ public final class ForestModel {
                 grid[i][j] = new ForestCell(CellState.EMPTY);
             }
         }
+        generateStation();
         generateLakes();
         generateTrees();
-        generateStation();
     }
 
     private void generateStation() {
-        for (int i = CENTER_X - 4; i <= CENTER_X + 4; i++) {
-            for (int j = CENTER_Y - 4; j <= CENTER_Y + 4; j++) {
-                grid[i][j].updateState(CellState.EMPTY);
-            }
-        }
         for (int i = CENTER_X - 2; i <= CENTER_X + 2; i++) {
             for (int j = CENTER_Y - 2; j <= CENTER_Y + 2; j++) {
                 grid[i][j].updateState(CellState.STATION);
@@ -115,6 +117,7 @@ public final class ForestModel {
 
             if(grid[seed.x()][seed.y()].getState() == CellState.EMPTY) {
                 grid[seed.x()][seed.y()].updateState(CellState.TREE);
+                trees.add(seed);
             }
         }
     }
@@ -127,15 +130,57 @@ public final class ForestModel {
 
             Coord2D seed = new Coord2D(seedX, seedY);
 
-            if(!lakes.contains(seed)) {
+            if(!lakes.contains(seed) && grid[seed.x()][seed.y()].getState() == CellState.EMPTY) {
                 lakes.add(seed);
                 grid[seed.x()][seed.y()].updateState(CellState.WATER);
             }
         }
     }
 
+    public List<Coord2D> removeTree() {
+        List<Coord2D> toRemove = new ArrayList<>();
+        for (Coord2D tree : burningTrees.keySet()) {
+            if (System.currentTimeMillis() - burningTrees.get(tree) >= BURNING_DELAY / this.fps) {
+                toRemove.add(tree);
+            }
+        }
+        for (Coord2D tree : toRemove) {
+            grid[tree.x()][tree.y()].updateState(CellState.EMPTY);
+            burningTrees.remove(tree);
+            trees.remove(tree);
+        }
+        return toRemove;
+    }
+
+    public void startRandomFire() {
+        Coord2D randTree = this.trees.get(rand.nextInt(0, trees.size()));
+        burningTrees.put(randTree, System.currentTimeMillis());
+        this.grid[randTree.x()][randTree.y()].updateState(CellState.BURNING);
+    }
+
+    public void spreadFire() {
+        for (int i = 0; i < Config.GRID_WIDTH; i++) {
+            for (int j = 0; j < Config.GRID_HEIGHT; j++) {
+                if(this.grid[i][j].getState() == CellState.BURNING) {
+                    Coord2D burningTree = new Coord2D(i, j);
+                    double prob = rand.nextDouble();
+                    List<Coord2D> neighbourTrees = burningTree.neighbours()
+                        .stream()
+                        .filter(coord -> coord.isValid() &&
+                            this.grid[coord.x()][coord.y()].getState() == CellState.TREE
+                        ).collect(Collectors.toList());
+                    if(!neighbourTrees.isEmpty() && prob > SPREAD_PROB) {
+                        Coord2D newBurningTree = neighbourTrees.get(rand.nextInt(0, neighbourTrees.size()));
+                        burningTrees.put(newBurningTree, System.currentTimeMillis());
+                        this.grid[newBurningTree.x()][newBurningTree.y()].updateState(CellState.BURNING);
+                    }
+                }
+            }
+        }
+    }
+
     public ForestCell[][] getGrid() {
-        return grid;
+        return this.grid;
     }
 
     public int getFPS()         { return this.fps; }

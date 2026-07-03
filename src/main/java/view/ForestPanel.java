@@ -60,6 +60,13 @@ public class ForestPanel extends JPanel {
         }
     }
 
+    public void updateCell(int i, int j) {
+        if (buffer == null) return;
+        Graphics bg = buffer.getGraphics();
+        renderer.render(bg, i, j);
+        bg.dispose();
+    }
+
     private void renderDrones(Graphics g) {
         for (Coord2D pos : agentsPoses.values()) {
             renderer.renderDrone(g, pos.x(), pos.y());
