@@ -26,6 +26,7 @@ public class ForestEnvironment extends Environment {
     private ForestModel model;
     SimulationController controller;
     private final Map<String, Coord2D> agentsPoses = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, Coord2D> homePositions = Collections.synchronizedMap(new HashMap<>());
     private final List<Literal> stationPercepts = new ArrayList<>();
 
     @Override
@@ -52,11 +53,13 @@ public class ForestEnvironment extends Environment {
         agentsPoses.put("scoutE", new Coord2D(centerX + 2, centerY - 3));
         agentsPoses.put("scoutW", new Coord2D(centerX - 2, centerY + 3));
         agentsPoses.put("scoutS", new Coord2D(centerX - 2, centerY - 3));
-
+        agentsPoses.forEach((name, pos) -> {
+            homePositions.put(name, pos);
+        });
     }
 
     private void initStationAgent() {
-        agentsPoses.forEach((name, pos) -> {
+        homePositions.forEach((name, pos) -> {
             stationPercepts.add(Literal.parseLiteral("charge_station(" + name + ", " + pos.x() + ", " + pos.y() + ")"));
         });
     }
@@ -127,6 +130,9 @@ public class ForestEnvironment extends Environment {
                 Thread.sleep(1000L / model.getFPS());
             } catch (InterruptedException ignored) { }
             notifyChange();
+            return true;
+        } else if(action.getFunctor().equals("respawn")) {
+            agentsPoses.put(agent, homePositions.get(agent));
             return true;
         }
         return false;

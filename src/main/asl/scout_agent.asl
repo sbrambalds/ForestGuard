@@ -69,7 +69,14 @@ offset(0, -1).
     !come_back(XD, YD).
 
 -!come_back(XD, YD) <-
-    .print("Navigation failure during come_back to ", XD, ", ", YD).
+    .print("Navigation failure, respawning...");
+    .wait(5000);
+    respawn;
+    -+battery_level(100, 1);
+    -+status(scouting);
+    -came_from(_, _);
+    -back_to_station(_, _);
+    !scouting.
 
 +!choose_step(NewX, NewY): position(X, Y) & came_from(PX, PY) & bound(Xmin, Xmax, Ymin, Ymax) <-
     SX = X + (X - PX);
