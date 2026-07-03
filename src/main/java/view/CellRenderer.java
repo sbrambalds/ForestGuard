@@ -61,15 +61,23 @@ public class CellRenderer {
 
     public void renderTrees(Graphics g, int i, int j) {
         int x = i * Config.CELL_SIZE;
-        int y = j * Config.CELL_SIZE;// - Config.CELL_SIZE;
+        int y = j * Config.CELL_SIZE;
         
         if (model.getGrid()[i][j].getState() == CellState.TREE) {
                 g.drawImage(sprites.getTree(i, j), x, y, Config.CELL_SIZE, Config.CELL_SIZE, null);
         }
     }
 
-    public void renderDrone(Graphics g, int posX, int posY) {
-        g.drawImage(sprites.getSDrone(), posX * Config.CELL_SIZE, posY * Config.CELL_SIZE, Config.CELL_SIZE, Config.CELL_SIZE, null);
+    public void renderDrone(Graphics g, int i, int j) {
+        g.drawImage(sprites.getSDrone(), i * Config.CELL_SIZE, j * Config.CELL_SIZE, Config.CELL_SIZE, Config.CELL_SIZE, null);
+    }
+
+    public void renderFireTrees(Graphics g, int i, int j, int frame) {
+        if (model.getGrid()[i][j].getState() == CellState.BURNING) {
+            int x = i * Config.CELL_SIZE;
+            int y = j * Config.CELL_SIZE;
+            g.drawImage(sprites.getFireTree(i, j, frame), x, y, Config.CELL_SIZE, Config.CELL_SIZE, null);
+        }
     }
 
     private void drawWaterTransitions(Graphics g, int i, int j) {
@@ -91,11 +99,6 @@ public class CellRenderer {
         if (S && W) draw(g, "corner_inner_tr", x, y, s);
         if (N && E) draw(g, "corner_inner_bl", x, y, s);
         if (N && W) draw(g, "corner_inner_br", x, y, s);
-
-        // if (!N && !W && NW) draw(g, "corner_outer_tl", x, y, s);
-        // if (!N && !E && NE) draw(g, "corner_outer_tr", x, y, s);
-        // if (!S && !W && SW) draw(g, "corner_outer_bl", x, y, s);
-        // if (!S && !E && SE) draw(g, "corner_outer_br", x, y, s);
 
         if (N && S && W && E) draw(g, "island", x, y, s);
     }

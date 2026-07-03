@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -15,14 +16,14 @@ import model.Config;
 
 public class SpriteRepository {
 
-    private static final String RES       = "/Users/rrambaldi/ForestGuard/src/main/resources/";
-    private static final String TREE_PATH = RES + "trees/";
+    private static final String RES        = "/Users/rrambaldi/ForestGuard/src/main/resources/";
+    private static final String TREE_PATH  = RES + "trees/";
     private static final String WATER_PATH = RES + "water/";
     private static final String STATION_PATH = RES + "station/";
-    private static final String DRONES_PATH = RES + "drones/";
-
+    private static final String DRONES_PATH  = RES + "drones/";
 
     private final ArrayList<Image> trees = new ArrayList<>();
+    private final List<List<Image>> fireSprites = new ArrayList<>();
     private final Map<String, Image> waterSprites = new HashMap<>();
     private final Map<String, Image> stationSprites = new HashMap<>();
     private final int[][] treeVariants = new int[Config.GRID_WIDTH][Config.GRID_HEIGHT];
@@ -38,15 +39,29 @@ public class SpriteRepository {
     }
 
     private void loadSprites() {
-        File[] treeFiles = new File(TREE_PATH + "/singole").listFiles(f -> f.getName().endsWith(".png"));
+        File[] treeFiles = new File(TREE_PATH + "singole").listFiles(f -> f.getName().endsWith(".png"));
         if (treeFiles != null) {
             java.util.Arrays.sort(treeFiles);
             for (File f : treeFiles) trees.add(load(f.getAbsolutePath()));
         }
-        grass = load(RES + "grass/grass_full.png");
-        water = load(RES + "water/water_full.png");
+
+        File[] fireFiles = new File(TREE_PATH + "burned").listFiles(f -> f.getName().endsWith(".png"));
+        if (fireFiles != null) {
+            java.util.Arrays.sort(fireFiles);
+            List<Image> frames = new ArrayList<>();
+            for (File f : fireFiles) {
+                frames.add(load(f.getAbsolutePath()));
+                if (frames.size() == 3) {
+                    fireSprites.add(new ArrayList<>(frames));
+                    frames.clear();
+                }
+            }
+        }
+
+        grass   = load(RES + "grass/grass_full.png");
+        water   = load(RES + "water/water_full.png");
         ffDrone = load(DRONES_PATH + "drone_firefighter.png");
-        sDrone = load(DRONES_PATH + "drone_scout.png");
+        sDrone  = load(DRONES_PATH + "drone_scout.png");
         cStation = load(STATION_PATH + "drone_charging_pad.png");
 
         for (String name : new String[]{
@@ -58,11 +73,11 @@ public class SpriteRepository {
             waterSprites.put(name, load(WATER_PATH + name + ".png"));
         }
 
-        for(String name: new String[]{
+        for (String name : new String[]{
             "roof_corner_bl", "roof_corner_br", "roof_corner_tl",
             "roof_corner_tr", "roof_edge_bottom", "roof_edge_left",
             "roof_edge_right", "roof_edge_top", "roof_full", "wall_brick",
-            "wall_garage_door", "wall_window" 
+            "wall_garage_door", "wall_window"
         }) {
             stationSprites.put(name, load(STATION_PATH + name + ".png"));
         }
@@ -94,6 +109,7 @@ public class SpriteRepository {
     }
 
     public Image getTree(int i, int j)              { return trees.get(treeVariants[i][j]); }
+    public Image getFireTree(int i, int j, int frame) { return fireSprites.get(treeVariants[i][j]).get(frame); }
     public Image getGrass()                         { return grass; }
     public Image getWater()                         { return water; }
     public Image getTransition(String name)         { return waterSprites.get(name); }

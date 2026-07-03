@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 import model.Config;
 import model.ForestModel;
@@ -18,6 +19,11 @@ public class ForestPanel extends JPanel {
     private final CellRenderer renderer;
     private BufferedImage buffer;
     private final Map<String, Coord2D> agentsPoses;
+    private int fireFrame = 0;
+    private final Timer fireTimer = new Timer(200, e -> {
+        fireFrame = (fireFrame + 1) % 3;
+        repaint();
+    });
 
     public ForestPanel(ForestModel model, Map<String, Coord2D> agentsPoses) {
         SpriteRepository sprites = new SpriteRepository();
@@ -27,6 +33,7 @@ public class ForestPanel extends JPanel {
             Config.GRID_WIDTH * Config.CELL_SIZE,
             Config.GRID_HEIGHT * Config.CELL_SIZE
         ));
+        fireTimer.start();
     }
 
     public void initBuffer() {
@@ -53,18 +60,17 @@ public class ForestPanel extends JPanel {
         }
     }
 
-    public void updateCell(int i, int j) {
-        if (buffer == null) return;
-        Graphics bg = buffer.getGraphics();
-        renderer.render(bg, i, j);
-        bg.dispose();
-        repaint(i * Config.CELL_SIZE, j * Config.CELL_SIZE, Config.CELL_SIZE, Config.CELL_SIZE);
-    }
-
-
     private void renderDrones(Graphics g) {
         for (Coord2D pos : agentsPoses.values()) {
             renderer.renderDrone(g, pos.x(), pos.y());
+        }
+    }
+
+    private void renderFire(Graphics g) {
+        for (int i = 0; i < Config.GRID_WIDTH; i++) {
+            for (int j = 0; j < Config.GRID_HEIGHT; j++) {
+                renderer.renderFireTrees(g, i, j, fireFrame);
+            }
         }
     }
 
@@ -73,6 +79,7 @@ public class ForestPanel extends JPanel {
         super.paintComponent(g);
         if (buffer != null) {
             g.drawImage(buffer, 0, 0, null);
+            renderFire(g);
             renderDrones(g);
         }
     }
