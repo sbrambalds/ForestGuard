@@ -16,6 +16,8 @@ public final class ForestModel {
     private static final int CENTER_Y = Config.GRID_HEIGHT / 2;
     private static final double SPREAD_PROB = 0.7;
     private static final long BURNING_DELAY = 30_000L;
+    private final static int FIRE_DELAY = 15000;
+    private final static int SPREAD_DELAY = FIRE_DELAY / 3;
 
     private final Random rand = new Random();
     private ForestCell[][] grid = new ForestCell[Config.GRID_WIDTH][Config.GRID_HEIGHT];
@@ -23,6 +25,9 @@ public final class ForestModel {
     private final List<Coord2D> trees = new ArrayList<>();
     private final HashMap<Coord2D, Long> burningTrees = new HashMap<>();
     private int fps = 1;
+    private long lastFireTime = System.currentTimeMillis();
+    private long lastSpreadTime = System.currentTimeMillis();
+
 
     public ForestModel() {
         grid = new ForestCell[Config.GRID_WIDTH][Config.GRID_HEIGHT];
@@ -156,6 +161,7 @@ public final class ForestModel {
         Coord2D randTree = this.trees.get(rand.nextInt(0, trees.size()));
         burningTrees.put(randTree, System.currentTimeMillis());
         this.grid[randTree.x()][randTree.y()].updateState(CellState.BURNING);
+        this.lastFireTime = System.currentTimeMillis();
     }
 
     public void spreadFire() {
@@ -176,6 +182,16 @@ public final class ForestModel {
                     }
                 }
             }
+        }
+        this.lastSpreadTime = System.currentTimeMillis();
+    }
+
+    public void tick() {
+        if (System.currentTimeMillis() - lastFireTime >= FIRE_DELAY / this.fps) {
+            startRandomFire();
+        }
+        if(System.currentTimeMillis() - lastSpreadTime >= SPREAD_DELAY / this.fps) {
+            spreadFire();
         }
     }
 

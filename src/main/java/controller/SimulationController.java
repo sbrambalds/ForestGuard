@@ -18,15 +18,12 @@ import view.ForestPanel;
 
 public class SimulationController {
 
-    private final static int BASE_DELAY = 15000;
+    private final static int BASE_DELAY = 200;
 
     private final ForestModel model;
     private final ForestPanel view;
     private final JFrame frame;
-    private Timer fireTimer;
-    private Timer spreadFireTimer;
-    private final int startFireDelay = BASE_DELAY;
-    private final int spreadFireDelay = BASE_DELAY / 3;
+    private Timer tickTimer;
 
     public SimulationController(ForestModel model, Map<String, Coord2D> agentsPoses, ForestEnvironment env) {
         this.model = model;
@@ -41,10 +38,8 @@ public class SimulationController {
             Config.GRID_HEIGHT * Config.CELL_SIZE
         ));
 
-        fireTimer = new Timer(startFireDelay / model.getFPS(), e -> model.startRandomFire());
-
-        spreadFireTimer = new Timer(spreadFireDelay / model.getFPS(), e -> {
-            model.spreadFire();
+        tickTimer = new Timer(BASE_DELAY, e -> {
+            model.tick();
             model.removeTree().forEach(c -> view.updateCell(c.x(), c.y()));
         });
 
@@ -56,8 +51,7 @@ public class SimulationController {
 
         view.initBuffer();
 
-        fireTimer.start();
-        spreadFireTimer.start();
+        tickTimer.start();
     }
 
     private JPanel buildControlPanel() {
@@ -70,10 +64,6 @@ public class SimulationController {
             int fps = speed.getValue();
             model.setFPS(fps);
             speedValue.setText(fps + " FPS");
-            fireTimer.setDelay(startFireDelay / fps);
-            fireTimer.restart();
-            spreadFireTimer.setDelay(spreadFireDelay / fps);
-            spreadFireTimer.restart();
         });
 
         controls.add(speedUp);
