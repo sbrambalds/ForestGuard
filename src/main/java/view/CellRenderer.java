@@ -48,10 +48,6 @@ public class CellRenderer {
             case CHARGE_STATION -> {
                 g.drawImage(sprites.getCStation(), x, y, s, s, null);
             }
-            // case BURNING -> {
-            //     g.setColor(Color.red);
-            //     g.fillRect(x, y, s, s);
-            // }
             default -> {
                 g.drawImage(sprites.getGrass(), x, y, s, s, null);
                 drawWaterTransitions(g, i, j);
@@ -70,6 +66,10 @@ public class CellRenderer {
 
     public void renderDrone(Graphics g, int i, int j) {
         g.drawImage(sprites.getSDrone(), i * Config.CELL_SIZE, j * Config.CELL_SIZE, Config.CELL_SIZE, Config.CELL_SIZE, null);
+    }
+
+    public void renderFireFighter(Graphics g, int i, int j) {
+        g.drawImage(sprites.getFFDrone(), i * Config.CELL_SIZE, j * Config.CELL_SIZE, Config.CELL_SIZE, Config.CELL_SIZE, null);
     }
 
     public void renderFireTrees(Graphics g, int i, int j, int frame) {

@@ -8,5 +8,6 @@ public enum CellState {
     STATION,
     FF_DRONE,
     S_DRONE,
-    CHARGE_STATION
+    CHARGE_STATION,
+    WET_TREE,
 }

@@ -68,9 +68,10 @@ public class ForestPanel extends JPanel {
     }
 
     private void renderDrones(Graphics g) {
-        for (Coord2D pos : agentsPoses.values()) {
-            renderer.renderDrone(g, pos.x(), pos.y());
-        }
+        agentsPoses.forEach((String name, Coord2D pos) -> {
+            if(name.contains("scout")) renderer.renderDrone(g, pos.x(), pos.y());
+            if(name.contains("firefighter")) renderer.renderFireFighter(g, pos.x(), pos.y());
+        });
     }
 
     private void renderFire(Graphics g) {
