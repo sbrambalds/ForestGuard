@@ -18,12 +18,14 @@ offset(0, -1).
     !move;
     !scouting.
 
-+!move : battery_level(Level, Steps) & Level > 0 & position(X, Y) & status(scouting) <-
++!move : position(X, Y, _) & status(scouting) <-
     !choose_step(NewX, NewY);
     move(NewX, NewY);
-    .findall(map(Xc, Yc, State), cell(Xc, Yc, State), Cells);
-    .send(station, tell, Cells);
+    !send_mapping;
     -+came_from(X, Y);
+    !consume_battery.
+
++!consume_battery : battery_level(Level, Steps) & Level > 0 & position(X, Y, _) <-
     if(Steps == 0) {
         -+battery_level(Level - 1, 1);
     } else {
@@ -39,7 +41,7 @@ offset(0, -1).
     -back_to_station(XD, YD)[source(A)];
     !come_back(XD, YD).
 
-+!come_back(XD, YD) : position(X, Y) & X == XD & Y == YD & recharge_time(T) <-
++!come_back(XD, YD) : position(X, Y, _) & X == XD & Y == YD & recharge_time(T) <-
     .print("Arrived. Recharging...");
     .wait(T);
     .print("Fully charged!");
@@ -48,37 +50,37 @@ offset(0, -1).
     -+came_from(XD, YD);
     !scouting.
 
-+!come_back(XD, YD) : position(X, Y) & X \== XD <-
++!come_back(XD, YD) : position(X, Y, _) & X \== XD <-
     if(X > XD) { PrefX = X - 1; } else { PrefX = X + 1; };
     if(not obstacle(PrefX, Y)) {
+        !send_mapping;
         move(PrefX, Y);
     } else {
         if(Y > YD) { AltY = Y - 1; } else { AltY = Y + 1; };
+        !send_mapping;
         move(X, AltY);
     };
+    !consume_battery;
     !come_back(XD, YD).
 
-+!come_back(XD, YD) : position(X, Y) & Y \== YD <-
++!come_back(XD, YD) : position(X, Y, _) & Y \== YD <-
     if(Y > YD) { PrefY = Y - 1; } else { PrefY = Y + 1; };
     if(not obstacle(X, PrefY)) {
+        !send_mapping;
         move(X, PrefY);
     } else {
         if(X > XD) { AltX = X - 1; } else { AltX = X + 1; };
+        !send_mapping;
         move(AltX, Y);
     };
+    !consume_battery;
     !come_back(XD, YD).
 
--!come_back(XD, YD) <-
-    .print("Navigation failure, respawning...");
-    .wait(5000);
-    respawn;
-    -+battery_level(100, 1);
-    -+status(scouting);
-    -came_from(_, _);
-    -back_to_station(_, _);
-    !scouting.
++!send_mapping <- 
+    .findall(map(Xc, Yc, State), cell(Xc, Yc, State), Cells);
+    .send(station, tell, map_update(Cells)).
 
-+!choose_step(NewX, NewY): position(X, Y) & came_from(PX, PY) & bound(Xmin, Xmax, Ymin, Ymax) <-
++!choose_step(NewX, NewY): position(X, Y, _) & came_from(PX, PY) & bound(Xmin, Xmax, Ymin, Ymax) <-
     SX = X + (X - PX);
     SY = Y + (Y - PY);
     .findall(free(NX, NY), (offset(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
@@ -97,7 +99,7 @@ offset(0, -1).
         NewY = PY;
     }.
 
-+!choose_step(NewX, NewY): position(X, Y) & bound(Xmin, Xmax, Ymin, Ymax) <-
++!choose_step(NewX, NewY): position(X, Y, _) & bound(Xmin, Xmax, Ymin, Ymax) <-
     .findall(free(NX, NY), (offset(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
     .random(L, Pos);
     Pos = free(NewX, NewY).

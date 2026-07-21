@@ -16,7 +16,6 @@ import jason.asSyntax.Literal;
 import jason.asSyntax.NumberTerm;
 import jason.asSyntax.Structure;
 import jason.environment.Environment;
-import model.CellState;
 import model.Config;
 import model.ForestModel;
 import utils.Coord2D;
@@ -27,6 +26,8 @@ public class ForestEnvironment extends Environment {
     private final int CENTER_Y = Config.GRID_HEIGHT / 2;
     private final static int FIRE_DELAY = 60_000;
     private final static int SPREAD_DELAY = FIRE_DELAY / 3;
+
+    private final Coord2D stationEntry = new Coord2D(CENTER_X, CENTER_Y + 2);
 
     private ForestModel model;
     private SimulationController controller;
@@ -45,9 +46,9 @@ public class ForestEnvironment extends Environment {
 
         initScoutAgents();
 
-        initStationAgent();
-
         initFFAgent();
+
+        initStationAgent();
 
         this.controller = new SimulationController(model, agentsPoses, this);
         
@@ -56,10 +57,10 @@ public class ForestEnvironment extends Environment {
     }
 
     private void initScoutAgents() {
-        agentsPoses.put("scoutN", new Coord2D(CENTER_X + 2, CENTER_Y + 3));
-        agentsPoses.put("scoutE", new Coord2D(CENTER_X + 2, CENTER_Y - 3));
-        agentsPoses.put("scoutW", new Coord2D(CENTER_X - 2, CENTER_Y + 3));
-        agentsPoses.put("scoutS", new Coord2D(CENTER_X - 2, CENTER_Y - 3));
+        agentsPoses.put("scoutN", new Coord2D(CENTER_X + 2, CENTER_Y + 1));
+        agentsPoses.put("scoutE", new Coord2D(CENTER_X + 2, CENTER_Y - 2));
+        agentsPoses.put("scoutW", new Coord2D(CENTER_X - 2, CENTER_Y + 1));
+        agentsPoses.put("scoutS", new Coord2D(CENTER_X - 2, CENTER_Y - 2));
         agentsPoses.forEach((name, pos) -> {
             homePositions.put(name, pos);
         });
@@ -69,17 +70,18 @@ public class ForestEnvironment extends Environment {
         homePositions.forEach((name, pos) -> {
             stationPercepts.add(Literal.parseLiteral("charge_station(" + name + ", " + pos.x() + ", " + pos.y() + ")"));
         });
+        stationPercepts.add(Literal.parseLiteral("station_entry(" + stationEntry.x() + "," + stationEntry.y() + ")"));
     }
 
     private void initFFAgent() {
-        agentsPoses.put("firefighter", new Coord2D(CENTER_X, CENTER_Y + 3));
-        homePositions.put("firefighter", new Coord2D(CENTER_X, CENTER_Y + 3));
+        agentsPoses.put("firefighter", new Coord2D(CENTER_X, CENTER_Y));
+        homePositions.put("firefighter", new Coord2D(CENTER_X, CENTER_Y));
     }
 
     private Collection<Literal> mappingPercepts(String agent) {
         Coord2D agentPose = agentsPoses.get(agent);
         return agentPose
-            .neighbours()
+            .visionRadius()
             .stream()
             .map((Coord2D pos) -> {
                 if (pos.isValid()) {
@@ -96,11 +98,8 @@ public class ForestEnvironment extends Environment {
         List<Literal> obstacles = new ArrayList<>();
 
         for (Coord2D pos : pose.cardinalNeighbours()) {
-            if(pos.isValid()) {
-                CellState posState = model.getGrid()[pos.x()][pos.y()].getState();
-                if(agentsPoses.containsValue(pos) || posState == CellState.STATION || (posState == CellState.BURNING && agent.contains("scout"))) {
-                    obstacles.add(Literal.parseLiteral("obstacle(" + pos.x() + ", " + pos.y() + ")"));
-                }
+            if(!pos.isValid() || agentsPoses.containsValue(pos)) {
+                obstacles.add(Literal.parseLiteral("obstacle(" + pos.x() + ", " + pos.y() + ")"));
             }
         }
 
@@ -113,7 +112,8 @@ public class ForestEnvironment extends Environment {
 
         if(!agent.contains("station")){
             Coord2D pos = agentsPoses.get(agent);
-            percepts.add(Literal.parseLiteral("position(" + pos.x() + "," + pos.y() + ")"));
+            String state = model.getGrid()[pos.x()][pos.y()].getState().getName();
+            percepts.add(Literal.parseLiteral("position(" + pos.x() + ", " + pos.y() + ", "+ state +")"));
             percepts.add(Literal.parseLiteral("recharge_time(" + (5 * 1000 / model.getFPS()) + ")"));
             percepts.addAll(mappingPercepts(agent));
             percepts.addAll(obstaclePercepts(agent));
@@ -148,10 +148,6 @@ public class ForestEnvironment extends Environment {
                 agentsPoses.put(agent, homePositions.get(agent));
                 return true;
             }
-            case "start_firefighter" -> {
-                initFFAgent();
-                return true;
-            }
             case "fire_extinguished" -> {
                 Coord2D agentPos = agentsPoses.get(agent);
                 model.extinguishFire(agentPos);
@@ -166,7 +162,7 @@ public class ForestEnvironment extends Environment {
         }
     }
 
-    public List<Coord2D> computeFire() {
+    public List<Coord2D> step() {
         long now = System.currentTimeMillis();
         int fps = model.getFPS();
 
@@ -178,6 +174,8 @@ public class ForestEnvironment extends Environment {
             model.spreadFire();
             lastSpreadTime = now;
         }
+
+        model.dryTree();
 
         List<Coord2D> removed = model.removeTree();
         if (!removed.isEmpty() && !model.isFireActive()) {

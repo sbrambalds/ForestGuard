@@ -4,7 +4,10 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -60,10 +63,12 @@ public class ForestPanel extends JPanel {
         }
     }
 
-    public void updateCell(int i, int j) {
-        if (buffer == null) return;
+    public void updateCells(List<Coord2D> cells) {
+        if (buffer == null || cells.isEmpty()) return;
         Graphics bg = buffer.getGraphics();
-        renderer.render(bg, i, j);
+        for (Coord2D c : cells) {
+            renderer.render(bg, c.x(), c.y());
+        }
         bg.dispose();
     }
 
@@ -82,12 +87,23 @@ public class ForestPanel extends JPanel {
         }
     }
 
+    private void renderVisionOverlay(Graphics g) {
+        Set<Coord2D> visible = new HashSet<>();
+        agentsPoses.values().forEach(pos -> visible.addAll(pos.visionRadius()));
+        for (Coord2D cell : visible) {
+            if (cell.isValid()) {
+                renderer.renderVisionHighlight(g, cell.x(), cell.y());
+            }
+        }
+    }
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (buffer != null) {
             g.drawImage(buffer, 0, 0, null);
             renderFire(g);
+            renderVisionOverlay(g);
             renderDrones(g);
         }
     }

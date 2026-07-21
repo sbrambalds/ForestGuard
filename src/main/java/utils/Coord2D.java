@@ -7,6 +7,8 @@ import java.util.List;
 import model.Config;
 
 public record Coord2D(int x, int y) {
+
+    private static final int RADIUS = 2;
     
     public boolean isValid() {
         return x >= 0 && x < Config.GRID_WIDTH && y >= 0 && y < Config.GRID_HEIGHT;
@@ -21,7 +23,7 @@ public record Coord2D(int x, int y) {
         ));
 
         list.addAll(cardinalNeighbours());
-        
+
         return list;
     }
 
@@ -32,6 +34,19 @@ public record Coord2D(int x, int y) {
             new Coord2D(x, y - 1),
             new Coord2D(x + 1, y)
         );
+    }
+
+    public List<Coord2D> visionRadius() {
+        List<Coord2D> list = new ArrayList<>();
+        for (int dx = -RADIUS; dx <= RADIUS; dx++) {
+            for (int dy = -RADIUS; dy <= RADIUS; dy++) {
+                if (dx == 0 && dy == 0) continue;
+                if (dx * dx + dy * dy <= RADIUS * RADIUS) {
+                    list.add(new Coord2D(x + dx, y + dy));
+                }
+            }
+        }
+        return list;
     }
 
         @Override

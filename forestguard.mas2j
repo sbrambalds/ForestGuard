@@ -10,6 +10,7 @@ MAS forestGuard {
 		scoutW scout_agent [beliefs="bound(0, 34, 20, 39)"];
 		scoutS scout_agent [beliefs="bound(0, 34, 0, 19)"];
 		station station_agent;
+		firefighter firefighter_agent;
 
 	aslSourcePath:
 		"src/main/asl";

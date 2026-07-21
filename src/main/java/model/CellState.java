@@ -9,5 +9,10 @@ public enum CellState {
     FF_DRONE,
     S_DRONE,
     CHARGE_STATION,
-    WET_TREE,
+    WATER_STATION,
+    WET_TREE;
+
+    public String getName() {
+        return this.toString().toLowerCase();
+    }
 }

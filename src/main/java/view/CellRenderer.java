@@ -48,6 +48,9 @@ public class CellRenderer {
             case CHARGE_STATION -> {
                 g.drawImage(sprites.getCStation(), x, y, s, s, null);
             }
+            case WATER_STATION -> {
+                g.drawImage(sprites.getCStation(), x, y, s, s, null);
+            }
             default -> {
                 g.drawImage(sprites.getGrass(), x, y, s, s, null);
                 drawWaterTransitions(g, i, j);
@@ -78,6 +81,14 @@ public class CellRenderer {
             int y = j * Config.CELL_SIZE;
             g.drawImage(sprites.getFireTree(i, j, frame), x, y, Config.CELL_SIZE, Config.CELL_SIZE, null);
         }
+    }
+
+    public void renderVisionHighlight(Graphics g, int i, int j) {
+        int x = i * Config.CELL_SIZE;
+        int y = j * Config.CELL_SIZE;
+        int s = Config.CELL_SIZE;
+        g.setColor(new Color(255, 255, 255, 70));
+        g.fillRect(x, y, s, s);
     }
 
     private void drawWaterTransitions(Graphics g, int i, int j) {
