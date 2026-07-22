@@ -1,4 +1,11 @@
 margin(10).
+fires_per_firefighter(3).
+dispatch_counter(0).
+
+firefighter_name(1, firefighter1).
+firefighter_name(2, firefighter2).
+firefighter_name(3, firefighter3).
+firefighter_name(4, firefighter4).
 
 +drone_state(X, Y, Battery, Steps)[source(A)] : charge_station(A, X2, Y2) & margin(M) <-
     Dx = math.abs(X2 - X);
@@ -25,7 +32,7 @@ margin(10).
     Dyh = math.abs(Yh - Y);
     Sh = Dxh + Dyh;
     if(Nw < Sh & Battery > ((Nw * 2) + Sh + M)) {
-        .print("Go to refill water at X =", BestXw, ", Y= ",  BestYw);
+        .print("Go to refill water at X =", BestXw, " Y= ",  BestYw);
         .send(A, tell, go_refill(BestXw, BestYw));
     } else {
         .print("Go back to station");
@@ -44,12 +51,31 @@ margin(10).
 +!save_pos([]).
 
 +!save_pos([map(Xc, Yc, State) | T]) <-
-    -cell(Xc, Yc, _); 
+    -cell(Xc, Yc, _);
     +cell(Xc, Yc, State);
     if(State == burning & not dispatched(Xc, Yc)) {
         +dispatched(Xc, Yc);
-        .print("Fire detected! Send firefighters...");
-        .send(firefighter, tell, extinguish_fire(Xc, Yc));
+        .findall(C, cell(_, _, burning), Burning);
+        .length(Burning, NumBurning);
+        ?fires_per_firefighter(FPF);
+        if(NumBurning >= (3 * FPF)) {
+            Active = 4;
+        } else {
+            if(NumBurning >= (2 * FPF)) {
+                Active = 3;
+            } else {
+                if(NumBurning >= FPF) {
+                    Active = 2;
+                } else {
+                    Active = 1;
+                };
+            };
+        };
+        ?dispatch_counter(C0);
+        Idx = 1 + (C0 mod Active);
+        -+dispatch_counter(C0 + 1);
+        ?firefighter_name(Idx, FFName);
+        .print("Fire detected! Dispatching to ", FFName);
+        .send(FFName, tell, extinguish_fire(Xc, Yc));
     }
     !save_pos(T).
-

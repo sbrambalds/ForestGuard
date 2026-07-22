@@ -53,7 +53,11 @@ public final class ForestModel {
         grid[CENTER_X + 2][CENTER_Y - 2].updateState(CellState.CHARGE_STATION);
         grid[CENTER_X - 2][CENTER_Y - 2].updateState(CellState.CHARGE_STATION);
         grid[CENTER_X - 2][CENTER_Y + 1].updateState(CellState.CHARGE_STATION);
-        grid[CENTER_X][CENTER_Y].updateState(CellState.WATER_STATION);
+        grid[CENTER_X + 1][CENTER_Y].updateState(CellState.WATER_STATION);
+        grid[CENTER_X - 1][CENTER_Y].updateState(CellState.WATER_STATION);
+        grid[CENTER_X][CENTER_Y + 1].updateState(CellState.WATER_STATION);
+        grid[CENTER_X][CENTER_Y - 1].updateState(CellState.WATER_STATION);
+
     }
 
     private void generateLakes() {

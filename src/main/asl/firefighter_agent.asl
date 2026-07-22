@@ -22,7 +22,7 @@ offset(0, -1).
     !check_next.
 
 +!check_next : home(Xh, Yh) & position(X, Y, _) & X == Xh & Y == Yh <-
-    .wait(500);
+    .wait(extinguish_fire(_, _) | cell(_, _, burning));
     !check_next.
 
 +!check_next : home(Xh, Yh) <-
@@ -32,7 +32,6 @@ offset(0, -1).
 +!consume_battery : battery_level(Level) & Level > 0 & position(X, Y, _) <-
     NewLevel = Level - 1;
     -+battery_level(NewLevel);
-    .print("Battery level: ", NewLevel);
     .send(station, tell, drone_state(X, Y, NewLevel, 0)).
 
 +back_to_station(_, _)[source(A)] : home(Xh, Yh) <- 
@@ -58,7 +57,18 @@ offset(0, -1).
     };
     .print("Fire extinguished!");
     fire_extinguished;
+    !communicate(X, Y);
     -extinguish_fire(X, Y)[source(_)].
+
++!communicate(X, Y) <-
+    .findall(N, neighbour(N), Neighbours);
+    !notify_all(Neighbours, X, Y).
+
++!notify_all([], _, _).
+
++!notify_all([N|Rest], X, Y) <-
+    .send(N, tell, fire_handled(X, Y));
+    !notify_all(Rest, X, Y).
 
 +!water_refilling : recharge_time(T) <-
     .print("Refilling water tank...");
@@ -88,7 +98,7 @@ offset(0, -1).
 
 +!go_to(XD, YD) : position(X, Y, _) & X == XD & Y == YD & home(Xh, Yh) & recharge_time(T) <- 
     if(XD == Xh & YD == Yh){
-        .print("Recharging battery...");
+        .print("Recharging battery and refilling water tank...");
         .wait(T);
         -+battery_level(100);
         -+water_tank(100);
@@ -104,3 +114,5 @@ offset(0, -1).
     move(BestX, BestY);
     !consume_battery;
     !go_to(XD, YD).
+
++fire_handled(X, Y)[source(_)] <- -extinguish_fire(X, Y)[source(_)].

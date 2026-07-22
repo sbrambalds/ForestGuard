@@ -27,8 +27,6 @@ public class ForestEnvironment extends Environment {
     private final static int FIRE_DELAY = 60_000;
     private final static int SPREAD_DELAY = FIRE_DELAY / 3;
 
-    private final Coord2D stationEntry = new Coord2D(CENTER_X, CENTER_Y + 2);
-
     private ForestModel model;
     private SimulationController controller;
     private final Map<String, Coord2D> agentsPoses = Collections.synchronizedMap(new HashMap<>());
@@ -46,9 +44,9 @@ public class ForestEnvironment extends Environment {
 
         initScoutAgents();
 
-        initFFAgent();
+        initFFAgents();
 
-        initStationAgent();
+        initChargeStations();
 
         this.controller = new SimulationController(model, agentsPoses, this);
         
@@ -62,20 +60,28 @@ public class ForestEnvironment extends Environment {
         agentsPoses.put("scoutW", new Coord2D(CENTER_X - 2, CENTER_Y + 1));
         agentsPoses.put("scoutS", new Coord2D(CENTER_X - 2, CENTER_Y - 2));
         agentsPoses.forEach((name, pos) -> {
-            homePositions.put(name, pos);
+            if(name.contains("scout")) {
+                homePositions.put(name, pos);
+            }
         });
     }
 
-    private void initStationAgent() {
+    private void initChargeStations() {
         homePositions.forEach((name, pos) -> {
             stationPercepts.add(Literal.parseLiteral("charge_station(" + name + ", " + pos.x() + ", " + pos.y() + ")"));
         });
-        stationPercepts.add(Literal.parseLiteral("station_entry(" + stationEntry.x() + "," + stationEntry.y() + ")"));
     }
 
-    private void initFFAgent() {
-        agentsPoses.put("firefighter", new Coord2D(CENTER_X, CENTER_Y));
-        homePositions.put("firefighter", new Coord2D(CENTER_X, CENTER_Y));
+    private void initFFAgents() {
+        agentsPoses.put("firefighter1", new Coord2D(CENTER_X+1, CENTER_Y));
+        agentsPoses.put("firefighter2", new Coord2D(CENTER_X-1, CENTER_Y));
+        agentsPoses.put("firefighter3", new Coord2D(CENTER_X, CENTER_Y+1));
+        agentsPoses.put("firefighter4", new Coord2D(CENTER_X, CENTER_Y-1));
+        agentsPoses.forEach((name, pos) -> {
+            if(name.contains("firefighter")) {
+                homePositions.put(name, pos);
+            }
+        });    
     }
 
     private Collection<Literal> mappingPercepts(String agent) {
@@ -93,6 +99,20 @@ public class ForestEnvironment extends Environment {
             }).collect(Collectors.toList());
     }
 
+    private Collection<Literal> neighbourPercepts(String agent) {
+        Coord2D agentPose = agentsPoses.get(agent);
+        List<Coord2D> perceivedCells = agentPose.visionRadius();
+        List<Literal> neighbours = new ArrayList<>();
+
+        agentsPoses.forEach((other, otherPos) -> {
+            if (!other.equals(agent) && other.contains("firefighter") && perceivedCells.contains(otherPos)) {
+                neighbours.add(Literal.parseLiteral("neighbour(" + other + ")"));
+            }
+        });
+
+        return neighbours;
+    }
+
     private Collection<Literal> obstaclePercepts(String agent) {
         Coord2D pose = agentsPoses.get(agent);
         List<Literal> obstacles = new ArrayList<>();
@@ -106,6 +126,17 @@ public class ForestEnvironment extends Environment {
         return obstacles;
     }
 
+    private Collection<Literal> allPercepts(String agent) {
+        Collection<Literal> percepts = new ArrayList<>();
+
+        percepts.addAll(obstaclePercepts(agent));
+        percepts.addAll(mappingPercepts(agent));
+
+        if(agent.contains("firefighter")) percepts.addAll(neighbourPercepts(agent));
+
+        return percepts;
+    }
+
     @Override
     public Collection<Literal> getPercepts(String agent) {
         List<Literal> percepts = new ArrayList<>();
@@ -115,8 +146,7 @@ public class ForestEnvironment extends Environment {
             String state = model.getGrid()[pos.x()][pos.y()].getState().getName();
             percepts.add(Literal.parseLiteral("position(" + pos.x() + ", " + pos.y() + ", "+ state +")"));
             percepts.add(Literal.parseLiteral("recharge_time(" + (5 * 1000 / model.getFPS()) + ")"));
-            percepts.addAll(mappingPercepts(agent));
-            percepts.addAll(obstaclePercepts(agent));
+            percepts.addAll(allPercepts(agent));
             Coord2D home = homePositions.get(agent);
             if (home != null) {
                 percepts.add(Literal.parseLiteral("home(" + home.x() + "," + home.y() + ")"));
