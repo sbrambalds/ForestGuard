@@ -1,5 +1,6 @@
 battery_level(100, 1).
 status(scouting).
+came_from(-1, -1).
 
 offset(1, 0).
 offset(-1, 0).
@@ -19,8 +20,8 @@ offset(0, -1).
     !scouting.
 
 +!move : position(X, Y, _) & status(scouting) <-
-    !choose_step(NewX, NewY);
-    move(NewX, NewY);
+    !choose_step(NextX, NextY);
+    move(NextX, NextY);
     !send_mapping;
     -+came_from(X, Y);
     !consume_battery.
@@ -81,25 +82,5 @@ offset(0, -1).
     .send(station, tell, map_update(Cells)).
 
 +!choose_step(NewX, NewY): position(X, Y, _) & came_from(PX, PY) & bound(Xmin, Xmax, Ymin, Ymax) <-
-    SX = X + (X - PX);
-    SY = Y + (Y - PY);
     .findall(free(NX, NY), (offset(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
-
-    if(.member(free(SX, SY), L)) {
-        .concat(L, [free(SX,SY), free(SX,SY), free(SX,SY), free(SX,SY)], WeightedL);
-    } else {
-        WeightedL = L;
-    };
-
-    if(WeightedL \== []) {
-        .random(WeightedL, Pos);
-        Pos = free(NewX, NewY);
-    } else {
-        NewX = PX;
-        NewY = PY;
-    }.
-
-+!choose_step(NewX, NewY): position(X, Y, _) & bound(Xmin, Xmax, Ymin, Ymax) <-
-    .findall(free(NX, NY), (offset(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
-    .random(L, Pos);
-    Pos = free(NewX, NewY).
+    utils.choose_step(L, PX, PY, NewX, NewY).
