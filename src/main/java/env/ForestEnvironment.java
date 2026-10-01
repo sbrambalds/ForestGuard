@@ -55,9 +55,9 @@ public class ForestEnvironment extends Environment {
     }
 
     private void initScoutAgents() {
-        agentsPoses.put("scoutN", new Coord2D(CENTER_X + 2, CENTER_Y + 1));
+        agentsPoses.put("scoutN", new Coord2D(CENTER_X + 2, CENTER_Y + 2));
         agentsPoses.put("scoutE", new Coord2D(CENTER_X + 2, CENTER_Y - 2));
-        agentsPoses.put("scoutW", new Coord2D(CENTER_X - 2, CENTER_Y + 1));
+        agentsPoses.put("scoutW", new Coord2D(CENTER_X - 2, CENTER_Y + 2));
         agentsPoses.put("scoutS", new Coord2D(CENTER_X - 2, CENTER_Y - 2));
         agentsPoses.forEach((name, pos) -> {
             if(name.contains("scout")) {
@@ -73,10 +73,10 @@ public class ForestEnvironment extends Environment {
     }
 
     private void initFFAgents() {
-        agentsPoses.put("firefighter1", new Coord2D(CENTER_X+1, CENTER_Y));
-        agentsPoses.put("firefighter2", new Coord2D(CENTER_X-1, CENTER_Y));
-        agentsPoses.put("firefighter3", new Coord2D(CENTER_X, CENTER_Y+1));
-        agentsPoses.put("firefighter4", new Coord2D(CENTER_X, CENTER_Y-1));
+        agentsPoses.put("firefighter1", new Coord2D(CENTER_X + 2, CENTER_Y));
+        agentsPoses.put("firefighter2", new Coord2D(CENTER_X - 2, CENTER_Y));
+        agentsPoses.put("firefighter3", new Coord2D(CENTER_X, CENTER_Y + 2));
+        agentsPoses.put("firefighter4", new Coord2D(CENTER_X, CENTER_Y - 2));
         agentsPoses.forEach((name, pos) -> {
             if(name.contains("firefighter")) {
                 homePositions.put(name, pos);
@@ -117,13 +117,22 @@ public class ForestEnvironment extends Environment {
         Coord2D pose = agentsPoses.get(agent);
         List<Literal> obstacles = new ArrayList<>();
 
-        for (Coord2D pos : pose.cardinalNeighbours()) {
+        for (Coord2D pos : pose.visionRadius()) {
             if(!pos.isValid() || agentsPoses.containsValue(pos)) {
                 obstacles.add(Literal.parseLiteral("obstacle(" + pos.x() + ", " + pos.y() + ")"));
             }
         }
 
         return obstacles;
+    }
+
+    private Literal boundPercept(String agent) {
+        Coord2D home = homePositions.get(agent);
+        int xMin = home.x() >= CENTER_X ? CENTER_X : 0;
+        int xMax = home.x() >= CENTER_X ? Config.GRID_WIDTH - 1 : CENTER_X - 1;
+        int yMin = home.y() >= CENTER_Y ? CENTER_Y : 0;
+        int yMax = home.y() >= CENTER_Y ? Config.GRID_HEIGHT - 1 : CENTER_Y - 1;
+        return Literal.parseLiteral("bound(" + xMin + ", " + xMax + ", " + yMin + ", " + yMax + ")");
     }
 
     private Collection<Literal> allPercepts(String agent) {
@@ -147,6 +156,9 @@ public class ForestEnvironment extends Environment {
             percepts.add(Literal.parseLiteral("position(" + pos.x() + ", " + pos.y() + ", "+ state +")"));
             percepts.add(Literal.parseLiteral("recharge_time(" + (5 * 1000 / model.getFPS()) + ")"));
             percepts.addAll(allPercepts(agent));
+            if (agent.contains("scout")) {
+                percepts.add(boundPercept(agent));
+            }
             Coord2D home = homePositions.get(agent);
             if (home != null) {
                 percepts.add(Literal.parseLiteral("home(" + home.x() + "," + home.y() + ")"));

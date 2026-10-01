@@ -32,6 +32,9 @@ file(projectDir).listFiles().filter { it.extension == "mas2j" }.forEach { mas2jF
         mainClass.set("jason.infra.centralised.RunCentralisedMAS")
         args(mas2jFile.path)
         standardInput = System.`in`
+        javaLauncher.set(javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        })
     }
 }
 

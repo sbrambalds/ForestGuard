@@ -9,9 +9,10 @@ import model.ForestModel;
 
 public class CellRenderer {
 
-    private static final int STATION_SIZE = 5;
+    private static final int STATION_SIZE= 5;
     private static final String[][] STATION_LAYOUT = {
         {"roof_corner_tl",  "roof_edge_top",    "roof_edge_top",    "roof_edge_top",    "roof_corner_tr"},
+        {"roof_edge_left",  "roof_full",        "roof_full",        "roof_full",        "roof_edge_right"},
         {"roof_edge_left",  "roof_full",        "roof_full",        "roof_full",        "roof_edge_right"},
         {"roof_edge_left",  "roof_full",        "roof_full",        "roof_full",        "roof_edge_right"},
         {"roof_corner_bl",  "roof_edge_bottom", "roof_edge_bottom", "roof_edge_bottom", "roof_corner_br"},

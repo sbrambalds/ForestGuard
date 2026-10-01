@@ -44,19 +44,19 @@ public final class ForestModel {
 
     private void generateStation() {
         for (int i = CENTER_X - 2; i <= CENTER_X + 2; i++) {
-            for (int j = CENTER_Y - 2; j <= CENTER_Y + 2; j++) {
+            for (int j = CENTER_Y - 2; j <= CENTER_Y + 3; j++) {
                 grid[i][j].updateState(CellState.STATION);
             }
         }
 
-        grid[CENTER_X + 2][CENTER_Y + 1].updateState(CellState.CHARGE_STATION);
+        grid[CENTER_X + 2][CENTER_Y + 2].updateState(CellState.CHARGE_STATION);
         grid[CENTER_X + 2][CENTER_Y - 2].updateState(CellState.CHARGE_STATION);
         grid[CENTER_X - 2][CENTER_Y - 2].updateState(CellState.CHARGE_STATION);
-        grid[CENTER_X - 2][CENTER_Y + 1].updateState(CellState.CHARGE_STATION);
-        grid[CENTER_X + 1][CENTER_Y].updateState(CellState.WATER_STATION);
-        grid[CENTER_X - 1][CENTER_Y].updateState(CellState.WATER_STATION);
-        grid[CENTER_X][CENTER_Y + 1].updateState(CellState.WATER_STATION);
-        grid[CENTER_X][CENTER_Y - 1].updateState(CellState.WATER_STATION);
+        grid[CENTER_X - 2][CENTER_Y + 2].updateState(CellState.CHARGE_STATION);
+        grid[CENTER_X + 2][CENTER_Y].updateState(CellState.WATER_STATION);
+        grid[CENTER_X - 2][CENTER_Y].updateState(CellState.WATER_STATION);
+        grid[CENTER_X][CENTER_Y + 2].updateState(CellState.WATER_STATION);
+        grid[CENTER_X][CENTER_Y - 2].updateState(CellState.WATER_STATION);
 
     }
 
