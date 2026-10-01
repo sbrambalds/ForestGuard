@@ -201,22 +201,6 @@
                     ]
                 },
                 {
-                    "organization": "org.opentest4j",
-                    "name": "opentest4j",
-                    "version": "1.3.0",
-                    "artifacts": [
-                        {
-                            "name": "opentest4j",
-                            "path": "/Users/rrambaldi/.gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/152ea56b3a72f655d4fd677fc0ef2596c3dd5e6e/opentest4j-1.3.0.jar"
-                        },
-                        {
-                            "name": "opentest4j",
-                            "classifier": "sources",
-                            "path": "/Users/rrambaldi/.gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/afb8ff23cffb021c56f333953aebfe6e8818568e/opentest4j-1.3.0-sources.jar"
-                        }
-                    ]
-                },
-                {
                     "organization": "org.junit.platform",
                     "name": "junit-platform-commons",
                     "version": "1.10.0",
@@ -229,6 +213,22 @@
                         {
                             "name": "junit-platform-commons",
                             "path": "/Users/rrambaldi/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.0/d533ff2c286eaf963566f92baf5f8a06628d2609/junit-platform-commons-1.10.0.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.opentest4j",
+                    "name": "opentest4j",
+                    "version": "1.3.0",
+                    "artifacts": [
+                        {
+                            "name": "opentest4j",
+                            "path": "/Users/rrambaldi/.gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/152ea56b3a72f655d4fd677fc0ef2596c3dd5e6e/opentest4j-1.3.0.jar"
+                        },
+                        {
+                            "name": "opentest4j",
+                            "classifier": "sources",
+                            "path": "/Users/rrambaldi/.gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/afb8ff23cffb021c56f333953aebfe6e8818568e/opentest4j-1.3.0-sources.jar"
                         }
                     ]
                 },

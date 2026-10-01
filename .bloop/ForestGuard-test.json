@@ -257,22 +257,6 @@
                     ]
                 },
                 {
-                    "organization": "org.junit.platform",
-                    "name": "junit-platform-commons",
-                    "version": "1.10.0",
-                    "artifacts": [
-                        {
-                            "name": "junit-platform-commons",
-                            "classifier": "sources",
-                            "path": "/Users/rrambaldi/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.0/74f2f9694d30effa2caff679b9f02ba832cbd1ac/junit-platform-commons-1.10.0-sources.jar"
-                        },
-                        {
-                            "name": "junit-platform-commons",
-                            "path": "/Users/rrambaldi/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.0/d533ff2c286eaf963566f92baf5f8a06628d2609/junit-platform-commons-1.10.0.jar"
-                        }
-                    ]
-                },
-                {
                     "organization": "javax.json",
                     "name": "javax.json-api",
                     "version": "1.1.4",
@@ -301,6 +285,22 @@
                             "name": "opentest4j",
                             "classifier": "sources",
                             "path": "/Users/rrambaldi/.gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/afb8ff23cffb021c56f333953aebfe6e8818568e/opentest4j-1.3.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.junit.platform",
+                    "name": "junit-platform-commons",
+                    "version": "1.10.0",
+                    "artifacts": [
+                        {
+                            "name": "junit-platform-commons",
+                            "classifier": "sources",
+                            "path": "/Users/rrambaldi/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.0/74f2f9694d30effa2caff679b9f02ba832cbd1ac/junit-platform-commons-1.10.0-sources.jar"
+                        },
+                        {
+                            "name": "junit-platform-commons",
+                            "path": "/Users/rrambaldi/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.0/d533ff2c286eaf963566f92baf5f8a06628d2609/junit-platform-commons-1.10.0.jar"
                         }
                     ]
                 },
