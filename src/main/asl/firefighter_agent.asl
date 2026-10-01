@@ -21,12 +21,9 @@ offset(0, -1).
     !fight_fire;
     !check_next.
 
-+!check_next : home(Xh, Yh) & position(X, Y, _) & X == Xh & Y == Yh <-
++!check_next <-
+    .send(station, tell, idle);
     .wait(extinguish_fire(_, _) | cell(_, _, burning));
-    !check_next.
-
-+!check_next : home(Xh, Yh) <-
-    !go_to(Xh, Yh);
     !check_next.
 
 +!consume_battery : battery_level(Level) & Level > 0 & position(X, Y, _) <-
@@ -34,10 +31,10 @@ offset(0, -1).
     -+battery_level(NewLevel);
     .send(station, tell, drone_state(X, Y, NewLevel, 0)).
 
-+back_to_station(_, _)[source(A)] : home(Xh, Yh) <- 
++back_to_station(XD, YD)[source(A)] <-
     .suspend(check_next);
-    !go_to(Xh, Yh);
-    -back_to_station(_, _)[source(A)];
+    !go_to(XD, YD);
+    -back_to_station(XD, YD)[source(A)];
     .resume(check_next).
 
 +go_refill(X, Y)[source(A)] <-
@@ -47,13 +44,13 @@ offset(0, -1).
     -go_refill(X, Y)[source(A)];
     .resume(check_next).
 
-+!use_water : water_tank(Lt) & battery_level(Battery) & position(X, Y, _) & home(Xh, Yh) & recharge_time(T) <-
++!use_water : water_tank(Lt) & battery_level(Battery) & position(X, Y, _) & recharge_time(T) <-
     NewLt = Lt - 10;
     .wait(T);
     -+water_tank(NewLt);
     .print("Water level: ", NewLt);
     if(NewLt == 0) {
-        .send(station, tell, water_state(X, Y, Xh, Yh, Battery));
+        .send(station, tell, water_state(X, Y, Battery));
     };
     .print("Fire extinguished!");
     fire_extinguished;
@@ -96,13 +93,13 @@ offset(0, -1).
 +cell(X, Y, burning): not extinguish_fire(X, Y) <-
     +extinguish_fire(X, Y)[source(station)].
 
-+!go_to(XD, YD) : position(X, Y, _) & X == XD & Y == YD & home(Xh, Yh) & recharge_time(T) <- 
-    if(XD == Xh & YD == Yh){
-        .print("Recharging battery and refilling water tank...");
-        .wait(T);
-        -+battery_level(100);
-        -+water_tank(100);
-    }.
++!go_to(XD, YD) : position(X, Y, water_station) & X == XD & Y == YD & recharge_time(T) <-
+    .print("Recharging battery and refilling water tank...");
+    .wait(T);
+    -+battery_level(100);
+    -+water_tank(100).
+
++!go_to(XD, YD) : position(X, Y, _) & X == XD & Y == YD <- true.
 
 +!go_to(XD, YD) : position(X, Y, _) <-
     .findall(

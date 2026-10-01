@@ -1,4 +1,4 @@
-margin(10).
+margin(20).
 fires_per_firefighter(3).
 dispatch_counter(0).
 
@@ -24,7 +24,7 @@ firefighter_name(4, firefighter4).
     };
     -drone_state(X, Y, Battery, Steps)[source(A)].
 
-+water_state(X, Y, Xh, Yh, Battery)[source(A)] : cell(_, _, water) & margin(M) <-
++water_state(X, Y, Battery)[source(A)] : cell(_, _, water) & margin(M) & charge_station(A, Xh, Yh) <-
     .findall(water(D, Xw, Yw), cell(Xw, Yw, water) & Dxw = math.abs(Xw - X) & Dyw = math.abs(Yw - Y) & D = Dxw + Dyw, WBlocks);
     .sort(WBlocks, Sorted);
     Sorted = [water(Nw, BestXw, BestYw) | _];
@@ -38,9 +38,9 @@ firefighter_name(4, firefighter4).
         .print("Go back to station");
         .send(A, tell, back_to_station(Xh, Yh));
     };
-    -water_state(X, Y, Xh, Yh, Battery)[source(A)].
+    -water_state(X, Y, Battery)[source(A)].
 
-+water_state(X, Y, Xh, Yh)[source(A)] <-
++water_state(X, Y, Battery)[source(A)] : charge_station(A, Xh, Yh) <-
     +sent_home(A);
     .send(A, tell, back_to_station(Xh, Yh)).
 
@@ -79,3 +79,7 @@ firefighter_name(4, firefighter4).
         .send(FFName, tell, extinguish_fire(Xc, Yc));
     }
     !save_pos(T).
+
++idle[source(A)] : charge_station(A, Xh, Yh) <-
+    -idle[source(A)];
+    .send(A, tell, back_to_station(Xh, Yh)).
