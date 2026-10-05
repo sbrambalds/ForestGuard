@@ -6,7 +6,6 @@ import jason.asSemantics.Agent;
 import jason.asSemantics.DefaultInternalAction;
 import jason.asSemantics.TransitionSystem;
 import jason.asSemantics.Unifier;
-import jason.asSyntax.ASSyntax;
 import jason.asSyntax.ListTerm;
 import jason.asSyntax.Literal;
 import jason.asSyntax.NumberTerm;
@@ -14,6 +13,7 @@ import jason.asSyntax.NumberTermImpl;
 import jason.asSyntax.Structure;
 import jason.asSyntax.Term;
 import jason.asSyntax.VarTerm;
+import static utils.Utils.literalToCoord2D;
 
 public class visit_next extends DefaultInternalAction {
 
@@ -23,8 +23,12 @@ public class visit_next extends DefaultInternalAction {
     public Object execute(TransitionSystem ts, Unifier un, Term[] args) throws Exception {
         Agent agent = ts.getAg();
         ListTerm perceivedCells = (ListTerm) args[0];
-        int prevX = (int) ((NumberTerm) args[1]).solve();
-        int prevY = (int) ((NumberTerm) args[2]).solve();
+
+        Literal cameFrom = agent.findBel(Literal.parseLiteral("came_from(X, Y)"), new Unifier());
+        Coord2D prevPos = literalToCoord2D(cameFrom);
+
+        int prevX = prevPos.x();
+        int prevY = prevPos.y();
 
         long bestStep = Long.MAX_VALUE;
         int nextX = 0;
@@ -42,9 +46,7 @@ public class visit_next extends DefaultInternalAction {
             int cx = (int) ((NumberTerm) cell.getTerm(0)).solve();
             int cy = (int) ((NumberTerm) cell.getTerm(1)).solve();
 
-            Literal visited = ASSyntax.createLiteral("visited",
-                ASSyntax.createNumber(cx), ASSyntax.createNumber(cy), new VarTerm("Step"));
-            Literal visitedPos = agent.findBel(visited, un.clone());
+            Literal visitedPos = agent.findBel(Literal.parseLiteral("visited(" + "cx, " + "cy, " + new VarTerm("Step")+")"), un.clone());
 
             long step;
             if (visitedPos != null) {
@@ -53,8 +55,8 @@ public class visit_next extends DefaultInternalAction {
             } else {
                 step = 0;
             }
-            agent.addBel(ASSyntax.createLiteral("visited",
-                ASSyntax.createNumber(cx), ASSyntax.createNumber(cy), ASSyntax.createNumber(step)));
+
+            agent.addBel(Literal.parseLiteral("visited(" + cx + ", " + cy + ", " + step + ")"));
 
             if (step < fallbackStep) {
                 fallbackStep = step;
@@ -91,8 +93,8 @@ public class visit_next extends DefaultInternalAction {
             nextY = fallbackY;
         }
 
-        return un.unifies(args[3], new NumberTermImpl(nextX))
-            && un.unifies(args[4], new NumberTermImpl(nextY));
+        return un.unifies(args[1], new NumberTermImpl(nextX))
+            && un.unifies(args[2], new NumberTermImpl(nextY));
     }
 
 }

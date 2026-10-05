@@ -23,6 +23,7 @@ public class ForestPanel extends JPanel {
     private BufferedImage buffer;
     private final Map<String, Coord2D> agentsPoses;
     private int fireFrame = 0;
+
     private final Timer fireTimer = new Timer(200, e -> {
         fireFrame = (fireFrame + 1) % 3;
         repaint();
@@ -37,6 +38,10 @@ public class ForestPanel extends JPanel {
             Config.GRID_HEIGHT * Config.CELL_SIZE
         ));
         fireTimer.start();
+    }
+
+    public void setPaused(boolean paused) {
+        if (paused) fireTimer.stop(); else fireTimer.start();
     }
 
     public void initBuffer() {

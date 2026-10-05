@@ -45,7 +45,7 @@ direction(0, -1).
 
 +!use_water : water_tank(Lt) & battery_level(Battery, _) & position(X, Y, _) & wait_time(T) <-
     NewLt = Lt - 10;
-    .wait(T);
+    wait(T);
     -+water_tank(NewLt);
     .print("Water level: ", NewLt);
     if(NewLt == 0) {
@@ -60,7 +60,7 @@ direction(0, -1).
 
 +!water_refilling : wait_time(T) <-
     .print("Refilling water tank...");
-    .wait(T);
+    wait(T);
     -+water_tank(100).
 
 +!fight_fire : water_tank(W) & W > 0 & position(X, Y, burning) <-
@@ -84,7 +84,7 @@ direction(0, -1).
 +!go_to(XD, YD) : position(X, Y, water_station) & X == XD & Y == YD & wait_time(T) <-
     .print("Recharging battery and refilling water tank...");
     .send(station, tell, arrived_home);
-    .wait(T);
+    wait(T);
     -+battery_level(100, 1);
     -+water_tank(100).
 

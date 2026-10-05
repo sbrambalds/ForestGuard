@@ -36,7 +36,7 @@ direction(0, -1).
 
 +!come_back(XD, YD) : position(X, Y, _) & X == XD & Y == YD & wait_time(T) <-
     .print("Arrived. Recharging...");
-    .wait(T);
+    wait(T);
     .print("Fully charged!");
     -+battery_level(100, 2);
     -+status(scouting);
@@ -77,7 +77,7 @@ direction(0, -1).
 
 +!choose_step(NewX, NewY): position(X, Y, _) & came_from(PX, PY) & bound(Xmin, Xmax, Ymin, Ymax) <-
     .findall(free(NX, NY), (direction(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
-    utils.visit_next(L, PX, PY, NewX, NewY).
+    utils.visit_next(L, NewX, NewY).
 
 +!resume_scouting: last_pos(XD, YD) & position(X, Y, _) & X == XD & Y == YD <- 
     -+came_from(XD, YD).

@@ -40,10 +40,8 @@ public class CellRenderer {
                 g.drawImage(sprites.getWater(), x, y, s, s, null);
             }
             case STATION -> {
-                int centerX = Config.GRID_WIDTH  / 2;
-                int centerY = Config.GRID_HEIGHT / 2;
-                int relX = i - (centerX - STATION_SIZE / 2);
-                int relY = j - (centerY - STATION_SIZE / 2);
+                int relX = i - (Config.CENTER_X - STATION_SIZE / 2);
+                int relY = j - (Config.CENTER_Y - STATION_SIZE / 2);
                 g.drawImage(sprites.getStation(STATION_LAYOUT[relY][relX]), x, y, s, s, null);
             }
             case CHARGE_STATION -> {

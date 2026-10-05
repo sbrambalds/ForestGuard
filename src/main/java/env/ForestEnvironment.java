@@ -22,29 +22,25 @@ import utils.Coord2D;
 
 public class ForestEnvironment extends Environment {
 
-    private final int CENTER_X = Config.GRID_WIDTH / 2;
-    private final int CENTER_Y = Config.GRID_HEIGHT / 2;
-    private final static int FIRE_DELAY = 60_000;
-    private final static int SPREAD_DELAY = FIRE_DELAY / 3;
-
     private ForestModel model;
     private SimulationController controller;
-    private final Map<String, Coord2D> agentsPoses = Collections.synchronizedMap(new HashMap<>());
-    private final Map<String, Coord2D> homePositions = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, Coord2D> agentsPoses = Collections.synchronizedMap(new HashMap<>(Config.STATIONS));
     private final List<Literal> stationPercepts = new ArrayList<>();
-    private long lastFireTime = System.currentTimeMillis();
-    private long lastSpreadTime = System.currentTimeMillis();
-    
+    private final Object clock = new Object();
+    private volatile long tick = 0;
+    private long lastFireTick = 0;
+    private long lastSpreadTick = 0;
+
+    public ForestEnvironment() {
+        super(Config.STATIONS.size());
+    }
+
     @Override
     public void init(final String[] args) {
 
         this.model = new ForestModel();
 
         this.model.initForest();
-
-        initScoutAgents();
-
-        initFFAgents();
 
         initChargeStations();
 
@@ -54,38 +50,14 @@ public class ForestEnvironment extends Environment {
 
     }
 
-    private void initScoutAgents() {
-        agentsPoses.put("scoutN", new Coord2D(CENTER_X + 2, CENTER_Y + 2));
-        agentsPoses.put("scoutE", new Coord2D(CENTER_X + 2, CENTER_Y - 2));
-        agentsPoses.put("scoutW", new Coord2D(CENTER_X - 2, CENTER_Y + 2));
-        agentsPoses.put("scoutS", new Coord2D(CENTER_X - 2, CENTER_Y - 2));
-        agentsPoses.forEach((name, pos) -> {
-            if(name.contains("scout")) {
-                homePositions.put(name, pos);
-            }
-        });
-    }
-
     private void initChargeStations() {
-        homePositions.forEach((name, pos) -> {
+        Config.STATIONS.forEach((name, pos) -> {
             stationPercepts.add(Literal.parseLiteral("charge_station(" + name + ", " + pos.x() + ", " + pos.y() + ")"));
             if (name.startsWith("firefighter")) {
                 String index = name.substring("firefighter".length());
                 stationPercepts.add(Literal.parseLiteral("firefighter_name(" + index + ", " + name + ")"));
             }
         });
-    }
-
-    private void initFFAgents() {
-        agentsPoses.put("firefighter1", new Coord2D(CENTER_X + 2, CENTER_Y));
-        agentsPoses.put("firefighter2", new Coord2D(CENTER_X - 2, CENTER_Y));
-        agentsPoses.put("firefighter3", new Coord2D(CENTER_X, CENTER_Y + 2));
-        agentsPoses.put("firefighter4", new Coord2D(CENTER_X, CENTER_Y - 2));
-        agentsPoses.forEach((name, pos) -> {
-            if(name.contains("firefighter")) {
-                homePositions.put(name, pos);
-            }
-        });    
     }
 
     private Collection<Literal> mappingPercepts(String agent) {
@@ -131,15 +103,15 @@ public class ForestEnvironment extends Environment {
             .stream()
             .anyMatch(other -> !other.getKey().equals(agent)
                 && other.getValue().equals(pos)
-                && !pos.equals(homePositions.get(other.getKey())));
+                && !pos.equals(Config.homeOf(other.getKey())));
     }
 
     private Literal boundPercept(String agent) {
-        Coord2D home = homePositions.get(agent);
-        int xMin = home.x() >= CENTER_X ? CENTER_X : 0;
-        int xMax = home.x() >= CENTER_X ? Config.GRID_WIDTH - 1 : CENTER_X - 1;
-        int yMin = home.y() >= CENTER_Y ? CENTER_Y : 0;
-        int yMax = home.y() >= CENTER_Y ? Config.GRID_HEIGHT - 1 : CENTER_Y - 1;
+        Coord2D home = Config.homeOf(agent);
+        int xMin = home.x() >= Config.CENTER_X ? Config.CENTER_X : 0;
+        int xMax = home.x() >= Config.CENTER_X ? Config.GRID_WIDTH - 1 : Config.CENTER_X - 1;
+        int yMin = home.y() >= Config.CENTER_Y ? Config.CENTER_Y : 0;
+        int yMax = home.y() >= Config.CENTER_Y ? Config.GRID_HEIGHT - 1 : Config.CENTER_Y - 1;
         return Literal.parseLiteral("bound(" + xMin + ", " + xMax + ", " + yMin + ", " + yMax + ")");
     }
 
@@ -162,12 +134,12 @@ public class ForestEnvironment extends Environment {
             Coord2D pos = agentsPoses.get(agent);
             String state = model.getGrid()[pos.x()][pos.y()].getState().getName();
             percepts.add(Literal.parseLiteral("position(" + pos.x() + ", " + pos.y() + ", "+ state +")"));
-            percepts.add(Literal.parseLiteral("wait_time(" + (5 * 1000 / model.getFPS()) + ")"));
+            percepts.add(Literal.parseLiteral("wait_time(" + Config.WAIT_TICKS + ")"));
             percepts.addAll(allPercepts(agent));
             if (agent.contains("scout")) {
                 percepts.add(boundPercept(agent));
             }
-            Coord2D home = homePositions.get(agent);
+            Coord2D home = Config.homeOf(agent);
             if (home != null) {
                 percepts.add(Literal.parseLiteral("home(" + home.x() + "," + home.y() + ")"));
             }
@@ -179,57 +151,71 @@ public class ForestEnvironment extends Environment {
 
     @Override
     public boolean executeAction(String agent, Structure action) {
-        switch (action.getFunctor()) {
-            case "move" -> {
-                try {
+        try {
+            switch (action.getFunctor()) {
+                case "move" -> {
                     int newX = (int)((NumberTerm) action.getTerm(0)).solve();
                     int newY = (int)((NumberTerm) action.getTerm(1)).solve();
                     Coord2D newPos = new Coord2D(newX, newY);
                     if (newPos.isValid()) {
                         agentsPoses.put(agent, newPos);
                     }
-                } catch (NoValueException e) {}
-                try {
-                    Thread.sleep(1000L / model.getFPS());
-                } catch (InterruptedException ignored) { }
-                return true;
-            }
-            case "respawn" -> {
-                agentsPoses.put(agent, homePositions.get(agent));
-                return true;
-            }
-            case "fire_extinguished" -> {
-                Coord2D agentPos = agentsPoses.get(agent);
-                model.extinguishFire(agentPos);
-                if(!model.isFireActive()) {
-                    lastFireTime = System.currentTimeMillis();
+                    awaitTicks(1);
+                    return true;
                 }
-                return true;
+                case "wait" -> {
+                    awaitTicks((long)((NumberTerm) action.getTerm(0)).solve());
+                    return true;
+                }
+                case "fire_extinguished" -> {
+                    Coord2D agentPos = agentsPoses.get(agent);
+                    model.extinguishFire(agentPos, tick);
+                    if(!model.isFireActive()) {
+                        lastFireTick = tick;
+                    }
+                    return true;
+                }
+                default -> {
+                    return false;
+                }
             }
-            default -> {
-                return false;
+        } catch (NoValueException e) {
+            return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    private void awaitTicks(long n) throws InterruptedException {
+        synchronized (clock) {
+            long target = tick + n;
+            while (tick < target) {
+                clock.wait();
             }
         }
     }
 
     public List<Coord2D> step() {
-        long now = System.currentTimeMillis();
-        int fps = model.getFPS();
-
-        if (!model.isFireActive() && now - lastFireTime >= FIRE_DELAY / fps) {
-            model.startRandomFire();
+        synchronized (clock) {
+            tick++;
+            clock.notifyAll();
         }
 
-        if (model.isFireActive() && now - lastSpreadTime >= SPREAD_DELAY / fps) {
-            model.spreadFire();
-            lastSpreadTime = now;
+        if (!model.isFireActive() && tick - lastFireTick >= Config.FIRE_DELAY) {
+            model.startRandomFire(tick);
         }
 
-        model.dryTree();
+        if (model.isFireActive() && tick - lastSpreadTick >= Config.SPREAD_DELAY) {
+            model.spreadFire(tick);
+            lastSpreadTick = tick;
+        }
 
-        List<Coord2D> removed = model.removeTree();
+        model.dryTree(tick);
+
+        List<Coord2D> removed = model.removeTree(tick);
         if (!removed.isEmpty() && !model.isFireActive()) {
-            lastFireTime = System.currentTimeMillis();
+            lastFireTick = tick;
         }
         return removed;
     }

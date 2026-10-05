@@ -9,6 +9,7 @@ import javax.swing.JFrame;
 import javax.swing.Timer;
 
 import env.ForestEnvironment;
+import jason.runtime.MASConsoleGUI;
 import model.Config;
 import model.ForestModel;
 import utils.Coord2D;
@@ -27,15 +28,20 @@ public class SimulationController {
         this.model = model;
         this.simulationView = new ForestPanel(this.model, agentsPoses);
         this.frame = new JFrame("ForestGuard");
-        this.tickTimer = new Timer(1000 / model.getFPS(), e -> {
+        this.tickTimer = new Timer(1000 / Config.INITIAL_FPS, e -> {
+            if (MASConsoleGUI.hasConsole() && MASConsoleGUI.get().isPause()) return;
             List<Coord2D> changedCells = env.step();
             simulationView.updateCells(changedCells);
             simulationView.repaint();
         });
-        this.controlsView = new ControlPanel(model.getFPS(), fps -> {
-            model.setFPS(fps);
-            tickTimer.setDelay(1000 / fps);
-        });
+        this.controlsView = new ControlPanel(
+            Config.INITIAL_FPS,
+            fps -> tickTimer.setDelay(1000 / fps),
+            paused -> {
+                if (paused) tickTimer.stop(); else tickTimer.start();
+                simulationView.setPaused(paused);
+            }
+        );
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
