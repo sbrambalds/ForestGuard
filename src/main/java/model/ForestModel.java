@@ -1,11 +1,11 @@
 package model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import utils.Coord2D;
@@ -22,8 +22,8 @@ public final class ForestModel {
     private ForestCell[][] grid = new ForestCell[Config.GRID_WIDTH][Config.GRID_HEIGHT];
     private final Queue<Coord2D> lakes = new LinkedList<>();
     private final List<Coord2D> trees = new ArrayList<>();
-    private final HashMap<Coord2D, Long> burningTrees = new HashMap<>();
-    private final HashMap<Coord2D, Long> wetTrees = new HashMap<>();
+    private final ConcurrentHashMap<Coord2D, Long> burningTrees = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Coord2D, Long> wetTrees = new ConcurrentHashMap<>();
     private int fps = 1;
 
 
