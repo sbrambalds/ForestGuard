@@ -75,11 +75,11 @@ status(idle).
 
 +!fight_fire <- !check_next.
 
-+!go_to(XD, YD) : position(X, Y, water_station) & X == XD & Y == YD & wait_time(T) & moves_per_level(K) <-
++!go_to(XD, YD) : position(X, Y, water_station) & X == XD & Y == YD & wait_time(T) <-
     .print("Recharging battery and refilling water tank...");
     .send(station, tell, arrived_home);
     wait(T);
-    -+battery_level(100, K - 1);
+    -+battery_level(100, 1);
     -+water_tank(100).
 
 +!go_to(XD, YD) : position(X, Y, _) & X == XD & Y == YD <- true.
@@ -90,10 +90,15 @@ status(idle).
         (direction(Dx, Dy) & NX = X+Dx & NY = Y+Dy & not border(NX, NY) & not obstacle(NX, NY) & D = math.abs(NX-XD) + math.abs(NY-YD)),
         Options
     );
-    .sort(Options, [opt(_, NextX, NextY) | _]);
-    move(NextX, NextY);
-    !consume_battery;
+    if (Options == []) {
+        wait(1);
+    } else {
+        .sort(Options, [opt(_, NextX, NextY) | _]);
+        move(NextX, NextY);
+        !consume_battery;
+    };
     !go_to(XD, YD).
+.
 
 +back_to_station(XD, YD)[source(A)] : not status(recharge) <-
     .drop_intention(check_next);
