@@ -15,7 +15,7 @@ import jason.asSyntax.Structure;
 import jason.asSyntax.Term;
 import jason.asSyntax.VarTerm;
 
-public class choose_step extends DefaultInternalAction {
+public class visit_next extends DefaultInternalAction {
 
     private final Random rand = new Random();
 
@@ -42,14 +42,14 @@ public class choose_step extends DefaultInternalAction {
             int cx = (int) ((NumberTerm) cell.getTerm(0)).solve();
             int cy = (int) ((NumberTerm) cell.getTerm(1)).solve();
 
-            Literal visitedQuery = ASSyntax.createLiteral("visited",
+            Literal visited = ASSyntax.createLiteral("visited",
                 ASSyntax.createNumber(cx), ASSyntax.createNumber(cy), new VarTerm("Step"));
-            Literal found = agent.findBel(visitedQuery, un.clone());
+            Literal visitedPos = agent.findBel(visited, un.clone());
 
             long step;
-            if (found != null) {
-                step = (long) ((NumberTerm) found.getTerm(2)).solve() + 1;
-                agent.delBel(found);
+            if (visitedPos != null) {
+                step = (long) ((NumberTerm) visitedPos.getTerm(2)).solve() + 1;
+                agent.delBel(visitedPos);
             } else {
                 step = 0;
             }
