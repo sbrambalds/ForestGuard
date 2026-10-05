@@ -34,7 +34,7 @@ public class ForestEnvironment extends Environment {
     private final List<Literal> stationPercepts = new ArrayList<>();
     private long lastFireTime = System.currentTimeMillis();
     private long lastSpreadTime = System.currentTimeMillis();
-
+    
     @Override
     public void init(final String[] args) {
 
@@ -69,6 +69,10 @@ public class ForestEnvironment extends Environment {
     private void initChargeStations() {
         homePositions.forEach((name, pos) -> {
             stationPercepts.add(Literal.parseLiteral("charge_station(" + name + ", " + pos.x() + ", " + pos.y() + ")"));
+            if (name.startsWith("firefighter")) {
+                String index = name.substring("firefighter".length());
+                stationPercepts.add(Literal.parseLiteral("firefighter_name(" + index + ", " + name + ")"));
+            }
         });
     }
 
@@ -114,16 +118,20 @@ public class ForestEnvironment extends Environment {
     }
 
     private Collection<Literal> obstaclePercepts(String agent) {
-        Coord2D pose = agentsPoses.get(agent);
-        List<Literal> obstacles = new ArrayList<>();
+        return agentsPoses.get(agent)
+            .neighbours()
+            .stream()
+            .filter(pos -> !pos.isValid() || isBlockedByAgent(agent, pos))
+            .map(pos -> Literal.parseLiteral("obstacle(" + pos.x() + ", " + pos.y() + ")"))
+            .collect(Collectors.toList());
+    }
 
-        for (Coord2D pos : pose.visionRadius()) {
-            if(!pos.isValid() || agentsPoses.containsValue(pos)) {
-                obstacles.add(Literal.parseLiteral("obstacle(" + pos.x() + ", " + pos.y() + ")"));
-            }
-        }
-
-        return obstacles;
+    private boolean isBlockedByAgent(String agent, Coord2D pos) {
+        return agentsPoses.entrySet()
+            .stream()
+            .anyMatch(other -> !other.getKey().equals(agent)
+                && other.getValue().equals(pos)
+                && !pos.equals(homePositions.get(other.getKey())));
     }
 
     private Literal boundPercept(String agent) {
@@ -154,7 +162,7 @@ public class ForestEnvironment extends Environment {
             Coord2D pos = agentsPoses.get(agent);
             String state = model.getGrid()[pos.x()][pos.y()].getState().getName();
             percepts.add(Literal.parseLiteral("position(" + pos.x() + ", " + pos.y() + ", "+ state +")"));
-            percepts.add(Literal.parseLiteral("recharge_time(" + (5 * 1000 / model.getFPS()) + ")"));
+            percepts.add(Literal.parseLiteral("wait_time(" + (5 * 1000 / model.getFPS()) + ")"));
             percepts.addAll(allPercepts(agent));
             if (agent.contains("scout")) {
                 percepts.add(boundPercept(agent));
@@ -177,7 +185,7 @@ public class ForestEnvironment extends Environment {
                     int newX = (int)((NumberTerm) action.getTerm(0)).solve();
                     int newY = (int)((NumberTerm) action.getTerm(1)).solve();
                     Coord2D newPos = new Coord2D(newX, newY);
-                    if (newPos.isValid() && !agentsPoses.containsValue(newPos)) {
+                    if (newPos.isValid()) {
                         agentsPoses.put(agent, newPos);
                     }
                 } catch (NoValueException e) {}

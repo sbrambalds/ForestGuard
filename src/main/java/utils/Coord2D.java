@@ -8,7 +8,7 @@ import model.Config;
 
 public record Coord2D(int x, int y) {
 
-    private static final int RADIUS = 2;
+    private static final int RADIUS = 3;
     
     public boolean isValid() {
         return x >= 0 && x < Config.GRID_WIDTH && y >= 0 && y < Config.GRID_HEIGHT;
