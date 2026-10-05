@@ -31,7 +31,7 @@ direction(0, -1).
     !check_next.
 
 +!check_next <-
-    .send(station, tell, idle);
+    .send(station, tell, waiting);
     .wait(extinguish_fire(_, _) | cell(_, _, burning));
     !check_next.
 
@@ -104,7 +104,7 @@ direction(0, -1).
 +back_to_station(XD, YD)[source(A)] : not status(recharge) <-
     .drop_intention(check_next);
     .drop_intention(go_refill(_, _));
-    .abolish(go_refill(_, _));
+    -go_refill(_, _)[source(station)];
     -+status(recharge);
     !go_to(XD, YD);
     -+status(idle);

@@ -108,8 +108,8 @@ at_base(firefighter4).
     -arrived_home[source(A)];
     +at_base(A).
 
-+idle[source(A)] : charge_station(A, Xh, Yh) <-
-    -idle[source(A)];
++waiting[source(A)] : charge_station(A, Xh, Yh) <-
+    -waiting[source(A)];
     .send(A, tell, back_to_station(Xh, Yh)).
 
 +extinguished(X, Y)[source(A)] <-
