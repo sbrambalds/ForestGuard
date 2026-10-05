@@ -2,11 +2,6 @@ margin(20).
 fires_per_firefighter(3).
 dispatch_counter(0).
 
-at_base(firefighter1).
-at_base(firefighter2).
-at_base(firefighter3).
-at_base(firefighter4).
-
 +!save_pos([]).
 
 +!save_pos([map(Xc, Yc, State) | T]) <-
@@ -60,11 +55,11 @@ at_base(firefighter4).
         .nth(I - 1, Available, FFName);
     }.
 
-+drone_state(X, Y, Battery, Steps)[source(A)] : charge_station(A, X2, Y2) & margin(M) <-
++drone_state(X, Y, Battery, Steps)[source(A)] : charge_station(A, X2, Y2) & margin(M) & moves_per_level(A, K) <-
     Dx = math.abs(X2 - X);
     Dy = math.abs(Y2 - Y);
     S = Dx + Dy;
-    S2 = Battery;
+    S2 = Battery * K + Steps;
     if (Battery >= 100) {
         if (sent_home(A)) { -sent_home(A); }
     };
@@ -80,14 +75,14 @@ at_base(firefighter4).
     };
     -drone_state(X, Y, Battery, Steps)[source(A)].
 
-+water_state(X, Y, Battery)[source(A)] : cell(_, _, water) & margin(M) & charge_station(A, Xh, Yh) <-
++water_state(X, Y, Battery)[source(A)] : cell(_, _, water) & margin(M) & charge_station(A, Xh, Yh) & moves_per_level(A, K) <-
     .findall(water(D, Xw, Yw), cell(Xw, Yw, water) & Dxw = math.abs(Xw - X) & Dyw = math.abs(Yw - Y) & D = Dxw + Dyw, WBlocks);
     .sort(WBlocks, Sorted);
     Sorted = [water(Nw, BestXw, BestYw) | _];
     Dxh = math.abs(Xh - X);
     Dyh = math.abs(Yh - Y);
     Sh = Dxh + Dyh;
-    if(Nw < Sh & Battery > ((Nw * 2) + Sh + M)) {
+    if(Nw < Sh & (Battery * K) > ((Nw * 2) + Sh + M)) {
         .print("Go to refill water at X =", BestXw, " Y= ",  BestYw);
         .send(A, tell, go_refill(BestXw, BestYw));
     } else {

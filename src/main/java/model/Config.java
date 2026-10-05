@@ -1,6 +1,7 @@
 package model;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import utils.Coord2D;
@@ -15,6 +16,7 @@ public final class Config {
         public static final int LAKES_NUMBER = 10;
         public static final int CELL_SIZE = 21;
         public static final int BATTERY_FACTOR = 2;
+        public static final int BATTERY_LEVELS = 100;
         public static final double SPREAD_PROB = 0.7;
         public static final int INITIAL_FPS = 1;
         public static final long FIRE_DELAY = 60;
@@ -28,6 +30,13 @@ public final class Config {
                 "scoutE", new Coord2D(CENTER_X + 2, CENTER_Y - 2),
                 "scoutW", new Coord2D(CENTER_X - 2, CENTER_Y + 2),
                 "scoutS", new Coord2D(CENTER_X - 2, CENTER_Y - 2)
+        );
+
+        public static final List<Coord2D> DIRECTIONS = List.of(
+                new Coord2D(1, 0), 
+                new Coord2D(-1, 0), 
+                new Coord2D(0, 1), 
+                new Coord2D(0, -1)
         );
 
         public static final Map<String, Coord2D> FIREFIGHTER_STATIONS = Map.of(
@@ -47,10 +56,15 @@ public final class Config {
                 return STATIONS.get(agent);
         }
 
-        public static int batteryCapacity(String agent) {
+        private static int farthestCorner(String agent) {
                 Coord2D home = homeOf(agent);
                 int dx = Math.max(home.x(), GRID_WIDTH - 1 - home.x());
                 int dy = Math.max(home.y(), GRID_HEIGHT - 1 - home.y());
-                return BATTERY_FACTOR * (dx + dy);
+                return dx + dy;
+        }
+
+        public static int movesPerLevel(String agent) {
+                int ffMoves = (int) Math.ceil(BATTERY_FACTOR * farthestCorner(agent) / (double) BATTERY_LEVELS);
+                return SCOUT_STATIONS.containsKey(agent) ? 2 * ffMoves : ffMoves;
         }
 }

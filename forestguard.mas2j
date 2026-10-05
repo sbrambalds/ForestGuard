@@ -5,15 +5,15 @@ MAS forestGuard {
 	environment: env.ForestEnvironment()
 
 	agents:
-		scoutN scout_agent;
-		scoutE scout_agent;
-		scoutW scout_agent;
-		scoutS scout_agent;
-		station station_agent;
-		firefighter1 firefighter_agent;
-		firefighter2 firefighter_agent;
-		firefighter3 firefighter_agent;
-		firefighter4 firefighter_agent;
+		scoutN scout_agent agentClass agent.ScoutAgent;
+		scoutE scout_agent agentClass agent.ScoutAgent;
+		scoutW scout_agent agentClass agent.ScoutAgent;
+		scoutS scout_agent agentClass agent.ScoutAgent;
+		station station_agent agentClass agent.StationAgent;
+		firefighter1 firefighter_agent agentClass agent.FFAgent;
+		firefighter2 firefighter_agent agentClass agent.FFAgent;
+		firefighter3 firefighter_agent agentClass agent.FFAgent;
+		firefighter4 firefighter_agent agentClass agent.FFAgent;
 
 	aslSourcePath:
 		"src/main/asl";

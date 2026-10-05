@@ -1,11 +1,5 @@
-battery_level(100, 2).
 status(scouting).
 came_from(-1, -1).
-
-direction(1, 0).
-direction(-1, 0).
-direction(0, 1).
-direction(0, -1).
 
 !start.
 
@@ -26,19 +20,19 @@ direction(0, -1).
     -+came_from(X, Y);
     !consume_battery.
 
-+!consume_battery : battery_level(Level, Steps) & Level > 0 & position(X, Y, _) <-
++!consume_battery : battery_level(Level, Steps) & Level > 0 & position(X, Y, _) & moves_per_level(K) <-
     if(Steps == 0) {
-        -+battery_level(Level - 1, 2);
+        -+battery_level(Level - 1, K - 1);
     } else {
         -+battery_level(Level, Steps - 1);
     };
     .send(station, tell, drone_state(X, Y, Level, Steps)).
 
-+!come_back(XD, YD) : position(X, Y, _) & X == XD & Y == YD & wait_time(T) <-
++!come_back(XD, YD) : position(X, Y, _) & X == XD & Y == YD & wait_time(T) & moves_per_level(K) <-
     .print("Arrived. Recharging...");
     wait(T);
     .print("Fully charged!");
-    -+battery_level(100, 2);
+    -+battery_level(100, K - 1);
     -+status(scouting);
     -+came_from(XD, YD);
     !resume_scouting;

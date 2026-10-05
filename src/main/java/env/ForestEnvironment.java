@@ -25,7 +25,6 @@ public class ForestEnvironment extends Environment {
     private ForestModel model;
     private SimulationController controller;
     private final Map<String, Coord2D> agentsPoses = Collections.synchronizedMap(new HashMap<>(Config.STATIONS));
-    private final List<Literal> stationPercepts = new ArrayList<>();
     private final Object clock = new Object();
     private volatile long tick = 0;
     private long lastFireTick = 0;
@@ -42,22 +41,10 @@ public class ForestEnvironment extends Environment {
 
         this.model.initForest();
 
-        initChargeStations();
-
         this.controller = new SimulationController(model, agentsPoses, this);
         
         SwingUtilities.invokeLater(() -> controller.startSimulation());
 
-    }
-
-    private void initChargeStations() {
-        Config.STATIONS.forEach((name, pos) -> {
-            stationPercepts.add(Literal.parseLiteral("charge_station(" + name + ", " + pos.x() + ", " + pos.y() + ")"));
-            if (name.startsWith("firefighter")) {
-                String index = name.substring("firefighter".length());
-                stationPercepts.add(Literal.parseLiteral("firefighter_name(" + index + ", " + name + ")"));
-            }
-        });
     }
 
     private Collection<Literal> mappingPercepts(String agent) {
@@ -143,8 +130,6 @@ public class ForestEnvironment extends Environment {
             if (home != null) {
                 percepts.add(Literal.parseLiteral("home(" + home.x() + "," + home.y() + ")"));
             }
-        } else {
-            percepts.addAll(stationPercepts);
         }
         return percepts;
     }

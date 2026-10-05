@@ -1,11 +1,5 @@
-battery_level(100, 1).
 water_tank(100).
 status(idle).
-
-direction(1, 0).
-direction(-1, 0).
-direction(0, 1).
-direction(0, -1).
 
 !start.
 
@@ -35,9 +29,9 @@ direction(0, -1).
     .wait(extinguish_fire(_, _) | cell(_, _, burning));
     !check_next.
 
-+!consume_battery : battery_level(Level, Steps) & Level > 0 & position(X, Y, _) <-
++!consume_battery : battery_level(Level, Steps) & Level > 0 & position(X, Y, _) & moves_per_level(K) <-
     if(Steps == 0) {
-        -+battery_level(Level - 1, 1);
+        -+battery_level(Level - 1, K - 1);
     } else {
         -+battery_level(Level, Steps - 1);
     };
@@ -81,11 +75,11 @@ direction(0, -1).
 
 +!fight_fire <- !check_next.
 
-+!go_to(XD, YD) : position(X, Y, water_station) & X == XD & Y == YD & wait_time(T) <-
++!go_to(XD, YD) : position(X, Y, water_station) & X == XD & Y == YD & wait_time(T) & moves_per_level(K) <-
     .print("Recharging battery and refilling water tank...");
     .send(station, tell, arrived_home);
     wait(T);
-    -+battery_level(100, 1);
+    -+battery_level(100, K - 1);
     -+water_tank(100).
 
 +!go_to(XD, YD) : position(X, Y, _) & X == XD & Y == YD <- true.
