@@ -1,11 +1,11 @@
-battery_level(100, 1).
+battery_level(100, 2).
 status(scouting).
 came_from(-1, -1).
 
-offset(1, 0).
-offset(-1, 0).
-offset(0, 1).
-offset(0, -1).
+direction(1, 0).
+direction(-1, 0).
+direction(0, 1).
+direction(0, -1).
 
 !start.
 
@@ -28,13 +28,11 @@ offset(0, -1).
 
 +!consume_battery : battery_level(Level, Steps) & Level > 0 & position(X, Y, _) <-
     if(Steps == 0) {
-        -+battery_level(Level - 1, 1);
+        -+battery_level(Level - 1, 2);
     } else {
         -+battery_level(Level, Steps - 1);
     };
     .send(station, tell, drone_state(X, Y, Level, Steps)).
-
--!move : status(scouting) <- -+status(back_home).
 
 +back_to_station(XD, YD)[source(A)] <-
     .print("Coming back to recharge...");
@@ -42,7 +40,7 @@ offset(0, -1).
     -back_to_station(XD, YD)[source(A)];
     !come_back(XD, YD).
 
-+!come_back(XD, YD) : position(X, Y, _) & X == XD & Y == YD & recharge_time(T) <-
++!come_back(XD, YD) : position(X, Y, _) & X == XD & Y == YD & wait_time(T) <-
     .print("Arrived. Recharging...");
     .wait(T);
     .print("Fully charged!");
@@ -74,6 +72,7 @@ offset(0, -1).
         !send_mapping;
         move(AltX, Y);
     };
+    move(BestX, BestY);
     !consume_battery;
     !come_back(XD, YD).
 
@@ -82,5 +81,5 @@ offset(0, -1).
     .send(station, tell, map_update(Cells)).
 
 +!choose_step(NewX, NewY): position(X, Y, _) & came_from(PX, PY) & bound(Xmin, Xmax, Ymin, Ymax) <-
-    .findall(free(NX, NY), (offset(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
-    utils.choose_step(L, PX, PY, NewX, NewY).
+    .findall(free(NX, NY), (direction(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
+    utils.visit_next(L, PX, PY, NewX, NewY).
