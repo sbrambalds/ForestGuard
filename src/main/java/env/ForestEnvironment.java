@@ -13,12 +13,12 @@ import javax.swing.SwingUtilities;
 import controller.SimulationController;
 import jason.NoValueException;
 import jason.asSyntax.Literal;
-import jason.asSyntax.NumberTerm;
 import jason.asSyntax.Structure;
 import jason.environment.Environment;
 import model.Config;
 import model.ForestModel;
 import utils.Coord2D;
+import static utils.Utils.termToInteger;
 
 public class ForestEnvironment extends Environment {
 
@@ -139,8 +139,8 @@ public class ForestEnvironment extends Environment {
         try {
             switch (action.getFunctor()) {
                 case "move" -> {
-                    int newX = (int)((NumberTerm) action.getTerm(0)).solve();
-                    int newY = (int)((NumberTerm) action.getTerm(1)).solve();
+                    int newX = termToInteger(action.getTerm(0));
+                    int newY = termToInteger(action.getTerm(1));
                     Coord2D newPos = new Coord2D(newX, newY);
                     if (newPos.isValid()) {
                         agentsPoses.put(agent, newPos);
@@ -149,11 +149,13 @@ public class ForestEnvironment extends Environment {
                     return true;
                 }
                 case "wait" -> {
-                    awaitTicks((long)((NumberTerm) action.getTerm(0)).solve());
+                    awaitTicks(termToInteger(action.getTerm(0)));
                     return true;
                 }
                 case "fire_extinguished" -> {
-                    Coord2D agentPos = agentsPoses.get(agent);
+                    int posX = termToInteger(action.getTerm(0));
+                    int posY = termToInteger(action.getTerm(1));
+                    Coord2D agentPos = new Coord2D(posX, posY);
                     model.extinguishFire(agentPos, tick);
                     if(!model.isFireActive()) {
                         lastFireTick = tick;

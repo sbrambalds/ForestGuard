@@ -8,12 +8,12 @@ import jason.asSemantics.TransitionSystem;
 import jason.asSemantics.Unifier;
 import jason.asSyntax.ListTerm;
 import jason.asSyntax.Literal;
-import jason.asSyntax.NumberTerm;
 import jason.asSyntax.NumberTermImpl;
 import jason.asSyntax.Structure;
 import jason.asSyntax.Term;
 import jason.asSyntax.VarTerm;
 import static utils.Utils.literalToCoord2D;
+import static utils.Utils.termToInteger;
 
 public class visit_next extends DefaultInternalAction {
 
@@ -43,14 +43,14 @@ public class visit_next extends DefaultInternalAction {
 
         for (Term term : perceivedCells) {
             Structure cell = (Structure) term;
-            int cx = (int) ((NumberTerm) cell.getTerm(0)).solve();
-            int cy = (int) ((NumberTerm) cell.getTerm(1)).solve();
+            int cx = termToInteger(cell.getTerm(0));
+            int cy = termToInteger(cell.getTerm(1));
 
-            Literal visitedPos = agent.findBel(Literal.parseLiteral("visited(" + "cx, " + "cy, " + new VarTerm("Step")+")"), un.clone());
+            Literal visitedPos = agent.findBel(Literal.parseLiteral("visited(" + cx + ", " + cy + ", " + new VarTerm("Step")+")"), un.clone());
 
             long step;
             if (visitedPos != null) {
-                step = (long) ((NumberTerm) visitedPos.getTerm(2)).solve() + 1;
+                step = termToInteger(visitedPos.getTerm(2)) + 1;
                 agent.delBel(visitedPos);
             } else {
                 step = 0;

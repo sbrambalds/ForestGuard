@@ -14,25 +14,12 @@ dispatch_counter(0).
     !save_pos(T).
 
 +!compute_active(Active) <-
-    .findall(C, cell(_, _, burning), Burning);
-    .length(Burning, NumBurning);
+    .count(cell(_, _, burning), N);
     ?fires_per_firefighter(FPF);
-    if(NumBurning >= (3 * FPF)) {
-        Active = 4;
-    } else {
-        if(NumBurning >= (2 * FPF)) {
-            Active = 3;
-        } else {
-            if(NumBurning >= FPF) {
-                Active = 2;
-            } else {
-                Active = 1;
-            };
-        };
-    }.
+    Active = math.min(4, 1 + math.floor(N / FPF)).
 
 +!dispatch_ff(Xc, Yc) <-
-    .findall(d(D, F), (firefighter_name(_, F) & at_base(F) & charge_station(F, Xh, Yh) & D = math.abs(Xh - Xc) + math.abs(Yh - Yc)), Docked);
+    .findall(d(D, F), (firefighter_name(_, F) & at_base(F) & charge_station(F, Xh, Yh) & dist(Xc, Yc, Xh, Yh, D)), Docked);
     if (Docked \== []) {
         .min(Docked, d(_, FFName));
     } else {
@@ -51,66 +38,52 @@ dispatch_counter(0).
         ?firefighter_name(1 + (C0 mod Active), FFName);
     } else {
         .length(Available, N);
-        I = 1 + (C0 mod N);
-        .nth(I - 1, Available, FFName);
+        .nth(C0 mod N, Available, FFName);
     }.
 
-+drone_state(X, Y, Battery, Steps)[source(A)] : charge_station(A, X2, Y2) & margin(M) & moves_per_level(A, K) <-
-    Dx = math.abs(X2 - X);
-    Dy = math.abs(Y2 - Y);
-    S = Dx + Dy;
-    S2 = Battery * K + Steps;
-    if (Battery >= 100) {
-        if (sent_home(A)) { -sent_home(A); }
++!drone_state(X, Y, Battery, Steps)[source(A)] : charge_station(A, X2, Y2) & margin(M) & moves_per_level(A, K) <-
+    ?dist(X, Y, X2, Y2, S);
+    if (Battery >= 100 & sent_home(A)) { 
+        -sent_home(A); 
     };
-    if (S > 0) {
-        -at_base(A);
+    if (S > 0) { 
+        -at_base(A); 
     };
-    if (S2 <= (S + M)) {
-        if (not sent_home(A)) {
-            .print(A, " battery low, come back! battery=", Battery, " dist=", S);
-            +sent_home(A);
-            .send(A, tell, back_to_station(X2, Y2));
-        }
-    };
-    -drone_state(X, Y, Battery, Steps)[source(A)].
+    if (Battery * K + Steps <= S + M & not sent_home(A)) {
+        .print(A, " battery low, come back! battery=", Battery, " dist=", S);
+        +sent_home(A);
+        .send(A, achieve, back_to_station(X2, Y2));
+    }.
 
-+water_state(X, Y, Battery)[source(A)] : cell(_, _, water) & margin(M) & charge_station(A, Xh, Yh) & moves_per_level(A, K) <-
-    .findall(water(D, Xw, Yw), cell(Xw, Yw, water) & Dxw = math.abs(Xw - X) & Dyw = math.abs(Yw - Y) & D = Dxw + Dyw, WBlocks);
-    .sort(WBlocks, Sorted);
-    Sorted = [water(Nw, BestXw, BestYw) | _];
-    Dxh = math.abs(Xh - X);
-    Dyh = math.abs(Yh - Y);
-    Sh = Dxh + Dyh;
-    if(Nw < Sh & (Battery * K) > ((Nw * 2) + Sh + M)) {
++!water_state(X, Y, Battery)[source(A)] : cell(_, _, water) & margin(M) & charge_station(A, Xh, Yh) & moves_per_level(A, K) <-
+    .findall(water(D, Xw, Yw), (cell(Xw, Yw, water) & dist(Xw, Yw, X, Y, D)), WBlocks);
+    .min(WBlocks, water(Nw, BestXw, BestYw));
+    ?dist(X, Y, Xh, Yh, Dh);
+    if(Nw < Dh & (Battery * K) > ((Nw * 2) + Dh + M)) {
         .print("Go to refill water at X =", BestXw, " Y= ",  BestYw);
-        .send(A, tell, go_refill(BestXw, BestYw));
+        .send(A, achieve, go_refill(BestXw, BestYw));
     } else {
         .print("Go back to station");
-        .send(A, tell, back_to_station(Xh, Yh));
-    };
-    -water_state(X, Y, Battery)[source(A)].
+        .send(A, achieve, back_to_station(Xh, Yh));
+    }.
 
-+water_state(X, Y, Battery)[source(A)] : charge_station(A, Xh, Yh) <-
++!water_state(X, Y, Battery)[source(A)] : charge_station(A, Xh, Yh) <-
     +sent_home(A);
-    .send(A, tell, back_to_station(Xh, Yh)).
+    .send(A, achieve, back_to_station(Xh, Yh)).
 
-+map_update(L)[source(A)] <- 
-    !save_pos(L);
-    -map_update(L)[source(A)].
++!map_update(L) <-
+    !save_pos(L).
 
-+arrived_home[source(A)] <-
-    -arrived_home[source(A)];
++!arrived_home[source(A)] <-
     +at_base(A).
 
-+waiting[source(A)] : charge_station(A, Xh, Yh) <-
-    -waiting[source(A)];
-    .send(A, tell, back_to_station(Xh, Yh)).
++!waiting[source(A)] : charge_station(A, Xh, Yh) <-
+    .send(A, achieve, back_to_station(Xh, Yh)).
 
-+extinguished(X, Y)[source(A)] <-
-    -extinguished(X, Y)[source(A)];
++!extinguished(X, Y)[source(A)] <-
+    fire_extinguished(X, Y);
     -cell(X, Y, _);
     +cell(X, Y, wet_tree);
     -dispatched(X, Y);
     .findall(FF, (firefighter_name(_, FF) & FF \== A), Others);
-    .send(Others, tell, fire_handled(X, Y)).
+    .send(Others, achieve, fire_handled(X, Y)).

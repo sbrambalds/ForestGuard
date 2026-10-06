@@ -1,6 +1,7 @@
 package agent;
 
 import jason.asSemantics.Agent;
+import jason.asSyntax.ASSyntax;
 import jason.asSyntax.Literal;
 import model.Config;
 
@@ -17,6 +18,7 @@ public class StationAgent extends Agent {
             addInitialBel(Literal.parseLiteral("firefighter_name(" + index + ", " + name + ")"));
             addInitialBel(Literal.parseLiteral("at_base(" + name + ")"));
         });
+        addInitialBel(ASSyntax.parseRule("dist(X1, Y1, X2, Y2, D) :- D = math.abs(X1 - X2) + math.abs(Y1 - Y2)."));
         super.loadInitialAS(asSrc);
     }
     
