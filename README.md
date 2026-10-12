@@ -20,3 +20,26 @@ The technologies that will be implemented are:
 
 - Jason for the programming of the agents and their behaviours
 - Java for the environment, the grid simulation and the GUI
+
+# Deployment
+
+## Prerequisites
+- `git`
+- JDK 21
+
+All the other dependencies (including the Jason interpreter) are downloaded automatically by Gradle through the included wrapper: no global Gradle installation is needed.
+
+## Run
+```bash
+git clone <repository-url>
+cd ForestGuard
+./gradlew runForestguardMas
+```
+
+On Windows use `gradlew.bat runForestguardMas`.
+
+The task launches the centralised Jason infrastructure on `forestguard.mas2j`, opening both the Jason MAS console and the simulation window. The simulation can be paused and its speed changed from the controls at the top of the window.
+
+## Configuration
+- Simulation parameters (grid size, number of trees and lakes, fire and spreading delays, battery factor, ...) are defined in `src/main/java/model/Config.java`.
+- The agents are declared in `forestguard.mas2j`. Their names must match the ones in `Config.SCOUT_STATIONS` and `Config.FIREFIGHTER_STATIONS`, which assign each drone its home pad: adding or renaming an agent requires updating both files.

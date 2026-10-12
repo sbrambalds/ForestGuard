@@ -18,12 +18,11 @@ public final class Config {
         public static final int BATTERY_LEVELS = 100;
         public static final int SPEED = 1;
         public static final int FIRE_DELAY = 100;
-        public static final int BURNING_DELAY = 300;
+        public static final int BURNING_DELAY = 500;
         public static final int DRY_DELAY = 200;
         public static final int WAIT_TICKS = 5;
         public static final int SPREAD_DELAY = FIRE_DELAY / 3;
         public static final double SPREAD_PROB = 0.7;
-        public static final double NEW_FIRE_PROB = 0.8;
 
         public static final Map<String, Coord2D> SCOUT_STATIONS = Map.of(
                 "scoutN", new Coord2D(CENTER_X + 2, CENTER_Y + 2),
