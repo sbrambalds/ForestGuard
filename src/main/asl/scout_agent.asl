@@ -1,5 +1,12 @@
 status(scouting).
 came_from(-1, -1).
+margin(20).
+max_wait(3).
+waited(0).
+
+low_battery :- battery_level(L, S) & moves_per_level(K) & margin(M)
+               & position(X, Y, _) & home(Xh, Yh) & dist(X, Y, Xh, Yh, D)
+               & L * K + S <= D + M.
 
 !start.
 
@@ -7,7 +14,9 @@ came_from(-1, -1).
     .print("Start scouting...");
     !scouting.
 
-+!scouting : status(back_home) <- true.
++!scouting : low_battery & home(Xh, Yh) <-
+    !back_to_station(Xh, Yh);
+    !scouting.
 
 +!scouting <-
     !move;
@@ -20,24 +29,12 @@ came_from(-1, -1).
     -+came_from(X, Y);
     !consume_battery.
 
-+!consume_battery : battery_level(Level, Steps) & Level > 0 & position(X, Y, _) & moves_per_level(K) <-
++!consume_battery : battery_level(Level, Steps) & Level > 0 & moves_per_level(K) <-
     if(Steps == 0) {
         -+battery_level(Level - 1, K - 1);
     } else {
         -+battery_level(Level, Steps - 1);
-    };
-    .send(station, achieve, drone_state(X, Y, Level, Steps)).
-
-+!go_to(XD, YD) : status(back_home) & position(X, Y, _) & X == XD & Y == YD & wait_time(T) & moves_per_level(K) <-
-    .print("Arrived. Recharging...");
-    wait(T);
-    .print("Fully charged!");
-    -+battery_level(100, K - 1);
-    -+status(scouting);
-    -+came_from(XD, YD);
-    !go_to(XD, YD);
-    -last_pos(_, _);
-    !scouting.
+    }.
 
 +!send_mapping <- 
     .findall(map(Xc, Yc, State), cell(Xc, Yc, State), Cells);
@@ -48,26 +45,47 @@ came_from(-1, -1).
     .findall(free(NX, NY), (direction(DX, DY) & NX = X + DX & NY = Y + DY & not(obstacle(NX, NY)) & not(border(NX, NY)) & NX < Xmax & NX > Xmin & NY < Ymax & NY > Ymin), L);
     utils.visit_next(L, NewX, NewY).
 
++!go_to(XD, YD) : status(back_home) & position(X, Y, _) & X == XD & Y == YD & wait_time(T) & moves_per_level(K) <-
+    .print("Arrived. Recharging...");
+    wait(T);
+    .print("Fully charged!");
+    -+battery_level(100, K - 1);
+    -+status(scouting);
+    ?last_pos(Xl, Yl);
+    !go_to(Xl, Yl);
+    -last_pos(_, _).
+
 +!go_to(XD, YD): status(scouting) & position(X, Y, _) & X == XD & Y == YD <- 
     -+came_from(XD, YD).
 
-+!go_to(XD, YD): position(X, Y, _) <-
++!go_to(XD, YD): position(X, Y, _) & dist(X, Y, XD, YD, Dcur) & waited(W) & max_wait(MW) <-
     .findall(
         opt(D, NX, NY),
         (direction(Dx, Dy) & NX = X+Dx & NY = Y+Dy & not border(NX, NY) & not obstacle(NX, NY) & dist(NX, NY, XD, YD, D)),
         Options
     );
-    if (Options == []) {
-        wait(1);
+    .findall(opt(D, NX, NY), (.member(opt(D, NX, NY), Options) & D < Dcur), Closer);
+    if (Closer \== []) {
+        .min(Closer, opt(_, NextX, NextY));
+        !step(NextX, NextY);
     } else {
-        .sort(Options, [opt(_, NextX, NextY) | _]);
-        !send_mapping;
-        move(NextX, NextY);
-        !consume_battery;
+        if (Options \== [] & W >= MW) {
+            .min(Options, opt(_, NextX, NextY));
+            !step(NextX, NextY);
+        } else {
+            wait(1);
+            -+waited(W + 1);
+        };
     };
     !go_to(XD, YD).
 
-+!back_to_station(XD, YD)[source(station)]: position(X, Y, _) <-
++!step(NextX, NextY) <-
+    -+waited(0);
+    !send_mapping;
+    move(NextX, NextY);
+    !consume_battery.
+
++!back_to_station(XD, YD) : position(X, Y, _) <-
     .print("Coming back to recharge...");
     -+last_pos(X, Y);
     -+status(back_home);
