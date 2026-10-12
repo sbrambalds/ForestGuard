@@ -189,21 +189,19 @@ public class ForestEnvironment extends Environment {
             clock.notifyAll();
         }
 
-        if (!model.isFireActive() && tick - lastFireTick >= Config.FIRE_DELAY) {
+        if (tick - lastFireTick >= Config.FIRE_DELAY) {
             model.startRandomFire(tick);
+            lastFireTick = tick;
         }
 
-        if (model.isFireActive() && tick - lastSpreadTick >= Config.SPREAD_DELAY) {
-            model.spreadFire(tick);
+        if (tick - lastSpreadTick >= Config.SPREAD_DELAY) {
+            model.spreadFires(tick);
             lastSpreadTick = tick;
         }
 
         model.dryTree(tick);
 
         List<Coord2D> removed = model.removeTree(tick);
-        if (!removed.isEmpty() && !model.isFireActive()) {
-            lastFireTick = tick;
-        }
         return removed;
     }
 }

@@ -12,18 +12,18 @@ public final class Config {
         public static final int CENTER_X = GRID_WIDTH / 2;
         public static final int CENTER_Y = GRID_HEIGHT / 2;
         public static final int TREES_NUMBER = 1000;
-        public static final int ROCKS_NUMBER = 800;
         public static final int LAKES_NUMBER = 10;
         public static final int CELL_SIZE = 21;
         public static final int BATTERY_FACTOR = 2;
         public static final int BATTERY_LEVELS = 100;
+        public static final int SPEED = 1;
+        public static final int FIRE_DELAY = 100;
+        public static final int BURNING_DELAY = 300;
+        public static final int DRY_DELAY = 200;
+        public static final int WAIT_TICKS = 5;
+        public static final int SPREAD_DELAY = FIRE_DELAY / 3;
         public static final double SPREAD_PROB = 0.7;
-        public static final int INITIAL_FPS = 1;
-        public static final long FIRE_DELAY = 60;
-        public static final long SPREAD_DELAY = FIRE_DELAY / 3;
-        public static final long BURNING_DELAY = 300;
-        public static final long DRY_DELAY = 200;
-        public static final long WAIT_TICKS = 5;
+        public static final double NEW_FIRE_PROB = 0.8;
 
         public static final Map<String, Coord2D> SCOUT_STATIONS = Map.of(
                 "scoutN", new Coord2D(CENTER_X + 2, CENTER_Y + 2),

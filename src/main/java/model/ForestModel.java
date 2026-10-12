@@ -165,7 +165,7 @@ public final class ForestModel {
         this.grid[randTree.x()][randTree.y()].updateState(CellState.BURNING);
     }
 
-    public void spreadFire(long tick) {
+    public void spreadFires(long tick) {
         for (int i = 0; i < Config.GRID_WIDTH; i++) {
             for (int j = 0; j < Config.GRID_HEIGHT; j++) {
                 if(this.grid[i][j].getState() == CellState.BURNING) {
