@@ -1,8 +1,30 @@
 water_tank(100).
 status(idle).
+margin(20).
 
-target(X, Y) :- extinguish_fire(X, Y) & not obstacle(X, Y).
-target(X, Y) :- cell(X, Y, burning) & not obstacle(X, Y).
+low_battery :- battery_level(L, S) & moves_per_level(K) & margin(M)
+               & position(X, Y, _) & home(Xh, Yh) & dist(X, Y, Xh, Yh, D)
+               & L * K + S <= D + M.
+
+water_reachable(Xw, Yw) :- battery_level(L, S) & moves_per_level(K) & margin(M)
+    & position(X, Y, _) & home(Xh, Yh)
+    & dist(X, Y, Xw, Yw, Dw) & dist(Xw, Yw, Xh, Yh, Dwh) & dist(X, Y, Xh, Yh, Dh)
+    & Dw < Dh & L * K + S > Dw + Dwh + M.
+
+taken(X, Y) :- claimed(X, Y, _).
+
+target(X, Y) :- extinguish_fire(X, Y) & not obstacle(X, Y) & not taken(X, Y).
+target(X, Y) :- cell(X, Y, burning) & not obstacle(X, Y) & not taken(X, Y).
+
+nearest_target(X, Y) :-
+    position(Px, Py, _) & target(X, Y) & dist(Px, Py, X, Y, D) &
+    not (target(X2, Y2) & dist(Px, Py, X2, Y2, D2) & D2 < D).
+
+nearest_burning(X, Y) :-
+    position(Px, Py, _) & cell(X, Y, burning) & not obstacle(X, Y) & not taken(X, Y)
+    & dist(Px, Py, X, Y, D) &
+    not (cell(X2, Y2, burning) & not obstacle(X2, Y2) & not taken(X2, Y2)
+         & dist(Px, Py, X2, Y2, D2) & D2 < D).
 
 at_station :- home(X, Y) & position(X, Y, _).
 
@@ -10,36 +32,42 @@ at_station :- home(X, Y) & position(X, Y, _).
 
 +!start <- !check_next.
 
-+!check_next : status(idle) & target(Xf, Yf) <-
++!check_next : status(idle) & nearest_target(Xf, Yf) <-
     -extinguish_fire(Xf, Yf)[source(_)];
     -+status(fight_fire);
+    !claim(Xf, Yf);
     !go_to(Xf, Yf);
     !fight_fire;
+    -my_target(_, _);
     -+status(idle);
     !check_next.
 
 +!check_next <-
-    if (not at_station) {
+    if (not at_station & status(idle)) {
         .send(station, achieve, waiting);
     };
     .wait(extinguish_fire(_, _) | cell(_, _, burning));
     !check_next.
 
-+!consume_battery : battery_level(Level, Steps) & Level > 0 & position(X, Y, _) & moves_per_level(K) <-
++!consume_battery : battery_level(Level, Steps) & Level > 0 & moves_per_level(K) <-
     if(Steps == 0) {
         -+battery_level(Level - 1, K - 1);
     } else {
         -+battery_level(Level, Steps - 1);
     };
-    .send(station, achieve, drone_state(X, Y, Level, Steps)).
+    if (low_battery & not status(recharge) & home(Xh, Yh)) {
+        -+status(recharge);
+        !!recharge_trip(Xh, Yh);
+    }.
 
-+!use_water : water_tank(Lt) & battery_level(Battery, _) & position(X, Y, _) & wait_time(T) <-
++!use_water : water_tank(Lt) & position(X, Y, _) & wait_time(T) <-
     NewLt = Lt - 20;
     wait(T);
     -+water_tank(NewLt);
+    fire_extinguished(X, Y);
     .print("Water level: ", NewLt);
     if(NewLt == 0) {
-        .send(station, achieve, water_state(X, Y, Battery));
+        .send(station, achieve, water_state(X, Y));
     };
     .print("Fire extinguished!");
     .send(station, achieve, extinguished(X, Y));
@@ -56,7 +84,8 @@ at_station :- home(X, Y) & position(X, Y, _).
     !use_water;
     !fight_fire.
 
-+!fight_fire : water_tank(W) & W > 0 & cell(Xb, Yb, burning) & not obstacle(Xb, Yb) <-
++!fight_fire : water_tank(W) & W > 0 & nearest_burning(Xb, Yb) <-
+    !claim(Xb, Yb);
     !go_to(Xb, Yb);
     !fight_fire.
 
@@ -88,18 +117,29 @@ at_station :- home(X, Y) & position(X, Y, _).
     };
     !go_to(XD, YD).
 
+@bts[atomic]
 +!back_to_station(XD, YD) : not status(recharge) <-
+    -+status(recharge);
+    !!recharge_trip(XD, YD).
+
++!back_to_station(_, _) <- true.
+
++!recharge_trip(XD, YD) <-
+    .send(station, achieve, going_home);
     .drop_intention(check_next);
     .drop_intention(go_refill(_, _));
-    -+status(recharge);
+    !release;
     !go_to(XD, YD);
     -+status(idle);
     !!check_next.
 
-+!back_to_station(_, _) <- true.
++!refill_at(Xw, Yw) : water_reachable(Xw, Yw) <- !go_refill(Xw, Yw).
+
++!refill_at(_, _) : home(Xh, Yh) <- !back_to_station(Xh, Yh).
 
 +!go_refill(X, Y) : not status(recharge) <-
     .drop_intention(check_next);
+    !release;
     -+status(refill);
     !go_to(X, Y);
     !water_refilling;
@@ -110,7 +150,44 @@ at_station :- home(X, Y) & position(X, Y, _).
 
 +!fire_handled(X, Y) <-
     -extinguish_fire(X, Y)[source(_)];
+    .abolish(claimed(X, Y, _));
+    -my_target(X, Y);
     .succeed_goal(go_to(X, Y)).
 
-+cell(X, Y, burning): not extinguish_fire(X, Y) <-
++!claim(X, Y) : position(Px, Py, _) & dist(Px, Py, X, Y, D) <-
+    -+my_target(X, Y);
+    .findall(N, neighbour(N), Ns);
+    .send(Ns, achieve, claimed(X, Y, D)).
+
++!claimed(X, Y, D)[source(A)] : my_target(X, Y) & position(Px, Py, _)
+        & dist(Px, Py, X, Y, MyD) & .my_name(Me) & (MyD < D | (MyD == D & Me < A)) <-
+    .send(A, achieve, claimed(X, Y, MyD)).
+
++!claimed(X, Y, _)[source(A)] <-
+    +claimed(X, Y, A);
+    -extinguish_fire(X, Y)[source(_)];
+    if (my_target(X, Y)) {
+        -my_target(X, Y);
+        .succeed_goal(go_to(X, Y));
+    }.
+
++!release : my_target(X, Y) <-
+    -my_target(X, Y);
+    .findall(N, neighbour(N), Ns);
+    .send(Ns, achieve, released(X, Y)).
+
++!release <- true.
+
++!released(X, Y)[source(A)] : claimed(X, Y, A) <-
+    -claimed(X, Y, A);
+    +extinguish_fire(X, Y)[source(station)].
+
++!released(_, _) <- true.
+
++neighbour(N) : my_target(X, Y) & position(Px, Py, _) & dist(Px, Py, X, Y, D) <-
+    .send(N, achieve, claimed(X, Y, D)).
+
+-neighbour(N) <- .abolish(claimed(_, _, N)).
+
++cell(X, Y, burning): not extinguish_fire(X, Y) & not claimed(X, Y, _) <-
     +extinguish_fire(X, Y)[source(station)].
