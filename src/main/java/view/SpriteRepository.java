@@ -4,7 +4,6 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +15,7 @@ import model.Config;
 
 public class SpriteRepository {
 
-    private static final String RES        = "/Users/rrambaldi/ForestGuard/src/main/resources/";
+    private static final String RES        = "/";
     private static final String TREE_PATH  = RES + "trees/";
     private static final String WATER_PATH = RES + "water/";
     private static final String STATION_PATH = RES + "station/";
@@ -39,23 +38,16 @@ public class SpriteRepository {
     }
 
     private void loadSprites() {
-        File[] treeFiles = new File(TREE_PATH + "singole").listFiles(f -> f.getName().endsWith(".png"));
-        if (treeFiles != null) {
-            java.util.Arrays.sort(treeFiles);
-            for (File f : treeFiles) trees.add(load(f.getAbsolutePath()));
+        for (String name : new String[]{ "tree_flowering_bush", "tree_maple" }) {
+            trees.add(load(TREE_PATH + "singole/" + name + ".png"));
         }
 
-        File[] fireFiles = new File(TREE_PATH + "burned").listFiles(f -> f.getName().endsWith(".png"));
-        if (fireFiles != null) {
-            java.util.Arrays.sort(fireFiles);
+        for (String name : new String[]{ "tree_flowering_bush", "tree_maple" }) {
             List<Image> frames = new ArrayList<>();
-            for (File f : fireFiles) {
-                frames.add(load(f.getAbsolutePath()));
-                if (frames.size() == 3) {
-                    fireSprites.add(new ArrayList<>(frames));
-                    frames.clear();
-                }
+            for (String suffix : new String[]{ "_burning", "_burning_A", "_burning_B" }) {
+                frames.add(load(TREE_PATH + "burned/" + name + suffix + ".png"));
             }
+            fireSprites.add(frames);
         }
 
         grass   = load(RES + "grass/grass_full.png");
@@ -94,7 +86,11 @@ public class SpriteRepository {
 
     private Image load(String path) {
         try {
-            BufferedImage src = javax.imageio.ImageIO.read(new File(path));
+            java.net.URL url = SpriteRepository.class.getResource(path);
+            if (url == null) {
+                throw new IllegalStateException("Sprite not found on classpath: " + path);
+            }
+            BufferedImage src = javax.imageio.ImageIO.read(url);
             int s = Config.CELL_SIZE;
             BufferedImage scaled = new BufferedImage(s, s, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = scaled.createGraphics();
