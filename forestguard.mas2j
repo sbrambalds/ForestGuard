@@ -5,10 +5,10 @@ MAS forestGuard {
 	environment: env.ForestEnvironment()
 
 	agents:
-		scoutN scout_agent agentClass agent.ScoutAgent;
-		scoutE scout_agent agentClass agent.ScoutAgent;
-		scoutW scout_agent agentClass agent.ScoutAgent;
-		scoutS scout_agent agentClass agent.ScoutAgent;
+		scout1 scout_agent agentClass agent.ScoutAgent;
+		scout2 scout_agent agentClass agent.ScoutAgent;
+		scout3 scout_agent agentClass agent.ScoutAgent;
+		scout4 scout_agent agentClass agent.ScoutAgent;
 		station station_agent agentClass agent.StationAgent;
 		firefighter1 firefighter_agent agentClass agent.FFAgent;
 		firefighter2 firefighter_agent agentClass agent.FFAgent;

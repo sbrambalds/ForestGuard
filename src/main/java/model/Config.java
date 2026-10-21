@@ -25,10 +25,10 @@ public final class Config {
         public static final double SPREAD_PROB = 0.7;
 
         public static final Map<String, Coord2D> SCOUT_STATIONS = Map.of(
-                "scoutN", new Coord2D(CENTER_X + 2, CENTER_Y + 2),
-                "scoutE", new Coord2D(CENTER_X + 2, CENTER_Y - 2),
-                "scoutW", new Coord2D(CENTER_X - 2, CENTER_Y + 2),
-                "scoutS", new Coord2D(CENTER_X - 2, CENTER_Y - 2)
+                "scout1", new Coord2D(CENTER_X + 2, CENTER_Y + 2),
+                "scout2", new Coord2D(CENTER_X + 2, CENTER_Y - 2),
+                "scout3", new Coord2D(CENTER_X - 2, CENTER_Y + 2),
+                "scout4", new Coord2D(CENTER_X - 2, CENTER_Y - 2)
         );
 
         public static final List<Coord2D> DIRECTIONS = List.of(
